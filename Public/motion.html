@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Motion - Nordic Thingy</title>
+  <link rel="stylesheet" href="/style/style.css">
+  <style>
+    .motion-only-container {
+      height: calc(100vh - 140px);
+      display: flex;
+      flex-direction: column;
+      max-width: 900px;
+      margin: 0 auto;
+      gap: 1rem;
+    }
+    
+    .motion-display {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 0;
+    }
+
+    .motion-visual-large {
+      width: 250px;
+      height: 250px;
+      border-radius: 16px;
+      margin: 1.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border: 4px solid rgba(255, 255, 255, 0.9);
+    }
+
+    .motion-visual-large img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    .motion-visual-large.no-image {
+      font-size: 4rem;
+      color: #666;
+      font-weight: bold;
+    }
+
+    .motion-title-large {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 0.8rem;
+    }
+
+    .motion-description-large {
+      font-size: 1.2rem;
+      color: #666;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(248, 249, 250, 0.8);
+      border-radius: 10px;
+      border-left: 4px solid #e9ecef;
+      max-width: 350px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .navigation {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: transform 0.2s ease;
+      font-size: 0.9rem;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      transform: translateY(-2px);
+    }
+
+    .recording-section-large {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      flex-shrink: 0;
+      min-height: 100px;
+    }
+
+    .recording-left-large {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .recording-status-large {
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+    }
+
+    .recording-center-large {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-large {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+    }
+
+    .recording-right-large {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .recording-info-item-large {
+      text-align: center;
+      background: rgba(248, 249, 250, 0.8);
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+      min-width: 70px;
+    }
+
+    .recording-info-item-large strong {
+      display: block;
+      color: #007bff;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .status {
+      flex-shrink: 0;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .motion-only-container {
+        height: calc(100vh - 120px);
+      }
+      
+      .motion-visual-large {
+        width: 180px;
+        height: 180px;
+      }
+
+      .motion-visual-large.no-image {
+        font-size: 3rem;
+      }
+
+      .motion-description-large {
+        font-size: 1rem;
+        max-width: 280px;
+      }
+
+      .recording-section-large {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+      }
+      
+      .motion-title-large {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🏃 Head Motion - Nordic Thingy</h1>
+  
+  <div class="motion-only-container">
+    <div class="navigation">
+      <a href="/" class="nav-btn">🏠 Dashboard</a>
+      <a href="/chart" class="nav-btn">📈 Chart</a>
+      <a href="/sensors" class="nav-btn">🌡️ Sensors</a>
+      <a href="/motion" class="nav-btn active">🏃 Motion</a>
+      <a href="/patients" class="nav-btn">👥 Patients</a>
+    </div>
+
+    <div class="motion-display">
+      <div class="motion-title-large">🏃 Motion Detection</div>
+      <div id="motionVisual" class="motion-visual-large neutral">
+        <img id="motionImage" src="" alt="Avatar" style="display: none;">
+        <span id="motionFallback">⚪</span>
+      </div>
+      <div id="motionDescription" class="motion-description-large neutral">
+        Waiting for data...
+      </div>
+    </div>
+
+    <div class="recording-section-large">
+      <div class="recording-left-large">
+        <h2 style="margin: 0; font-size: 1.3rem;">📹 Recording</h2>
+        <div class="recording-status-large idle" id="recordingStatus">
+          🔴 Ready to record
+        </div>
+      </div>
+      
+      <div class="recording-center-large">
+        <button class="btn btn-start btn-large" id="startBtn">
+          ▶️ Start
+        </button>
+        <button class="btn btn-stop btn-large" id="stopBtn" disabled>
+          ⏹️ Stop
+        </button>
+        <button class="btn btn-download btn-large" id="downloadBtn" disabled>
+          💾 Download CSV
+        </button>
+      </div>
+
+      <div class="recording-right-large" id="recordingInfo" style="display: none;">
+        <div class="recording-info-item-large">
+          <strong id="recordingDuration">0:00</strong>
+          <span>Duration</span>
+        </div>
+        <div class="recording-info-item-large">
+          <strong id="recordingCount">0</strong>
+          <span>Points</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug info -->
+  <div class="debug-info" id="debugInfo" style="display: none;">
+    <div>Alert: <span id="debugAlert">-</span></div>
+    <div>Image: <span id="debugImage">-</span></div>
+  </div>
+
+  <script>
+    class MotionOnlyDashboard {
+      constructor(apiUrl, intervalMs = 1000) {
+        this.apiUrl = apiUrl;
+        this.intervalMs = intervalMs;
+        this.timer = null;
+        this.statusEl = document.getElementById('status');
+        this.motionVisualEl = document.getElementById('motionVisual');
+        this.motionDescriptionEl = document.getElementById('motionDescription');
+        this.motionImageEl = document.getElementById('motionImage');
+        this.motionFallbackEl = document.getElementById('motionFallback');
+        this.debugInfoEl = document.getElementById('debugInfo');
+        this.debugAlertEl = document.getElementById('debugAlert');
+        this.debugImageEl = document.getElementById('debugImage');
+        this.errorCount = 0;
+        this.successCount = 0;
+        
+        // Recording variables
+        this.isRecording = false;
+        this.currentSessionId = null;
+        this.recordingStartTime = null;
+        this.recordingTimer = null;
+        this.recordingCount = 0;
+        this.downloadUrl = null;
+        
+        // Load available assets
+        this.availableAssets = new Set();
+        this.loadAvailableAssets();
+        
+        this.initRecordingControls();
+        
+        // Enable debug in development mode
+        this.debugMode = window.location.hostname === 'localhost';
+        if (this.debugMode) {
+          this.debugInfoEl.style.display = 'block';
+        }
+      }
+
+      async loadAvailableAssets() {
+        try {
+          const response = await fetch('/api/assets');
+          if (response.ok) {
+            const assets = await response.json();
+            assets.forEach(asset => {
+              this.availableAssets.add(asset.name);
+            });
+            console.log('✅ Assets loaded:', Array.from(this.availableAssets));
+          }
+        } catch (error) {
+          console.error('❌ Asset loading error:', error);
+        }
+      }
+
+      initRecordingControls() {
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        startBtn.addEventListener('click', () => this.startRecording());
+        stopBtn.addEventListener('click', () => this.stopRecording());
+        downloadBtn.addEventListener('click', () => this.downloadSession());
+      }
+
+      async startRecording() {
+        try {
+          const response = await fetch('/api/sessions/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (!response.ok) {
+            throw new Error('Error creating session');
+          }
+
+          const result = await response.json();
+          this.currentSessionId = result.sessionId;
+          this.isRecording = true;
+          this.recordingStartTime = Date.now();
+          this.recordingCount = 0;
+
+          document.getElementById('startBtn').disabled = true;
+          document.getElementById('stopBtn').disabled = false;
+          document.getElementById('downloadBtn').disabled = true;
+          
+          const statusEl = document.getElementById('recordingStatus');
+          statusEl.textContent = '🔴 Recording...';
+          statusEl.className = 'recording-status-large recording';
+
+          document.getElementById('recordingInfo').style.display = 'flex';
+
+          this.recordingTimer = setInterval(() => {
+            this.updateRecordingDisplay();
+          }, 1000);
+
+        } catch (error) {
+          // Remove alert - just log error
+          console.error('Recording start error:', error);
+        }
+      }
+
+      async stopRecording() {
+        if (!this.isRecording || !this.currentSessionId) return;
+
+        try {
+          const response = await fetch(`/api/sessions/${this.currentSessionId}/stop`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (!response.ok) {
+            throw new Error('Error stopping session');
+          }
+
+          const result = await response.json();
+          this.downloadUrl = result.downloadUrl;
+
+          this.isRecording = false;
+          clearInterval(this.recordingTimer);
+
+          document.getElementById('startBtn').disabled = false;
+          document.getElementById('stopBtn').disabled = true;
+          document.getElementById('downloadBtn').disabled = false;
+          
+          const statusEl = document.getElementById('recordingStatus');
+          statusEl.textContent = `✅ Recording completed (${this.recordingCount} points)`;
+          statusEl.className = 'recording-status-large stopped';
+
+        } catch (error) {
+          // Remove alert - just log error
+          console.error('Recording stop error:', error);
+        }
+      }
+
+      downloadSession() {
+        if (this.downloadUrl) {
+          const link = document.createElement('a');
+          link.href = this.downloadUrl;
+          link.download = `${this.currentSessionId}.csv`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      }
+
+      updateRecordingDisplay() {
+        if (!this.isRecording) return;
+
+        const duration = Math.floor((Date.now() - this.recordingStartTime) / 1000);
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        
+        document.getElementById('recordingDuration').textContent = 
+          `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById('recordingCount').textContent = this.recordingCount;
+      }
+
+      async recordDataPoint() {
+        if (!this.isRecording || !this.currentSessionId) return;
+
+        try {
+          const response = await fetch(`/api/sessions/${this.currentSessionId}/record`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (response.ok) {
+            this.recordingCount++;
+          }
+        } catch (error) {
+          console.error('Failed to record data point:', error);
+          // Optional: show user feedback
+          const statusEl = document.getElementById('recordingStatus');
+          statusEl.textContent = `⚠️ Recording issue (${this.recordingCount} points)`;
+        }
+      }
+
+      async fetchData() {
+        try {
+          const response = await fetch(this.apiUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache'
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+          let data = await response.json();
+          
+          if (typeof data === 'string') {
+            data = JSON.parse(data);
+          }
+          
+          if (!data || typeof data !== 'object') {
+            throw new Error('Invalid format');
+          }
+          
+          this.successCount++;
+          this.errorCount = 0;
+          
+          return data;
+          
+        } catch (error) {
+          this.errorCount++;
+          this.updateStatus(`❌ Error: ${error.message}`, 'error');
+          return null;
+        }
+      }
+
+      updateMotionIndicator(motionAlert) {
+        if (!motionAlert) return;
+
+        // Clear existing classes
+        this.motionVisualEl.className = 'motion-visual-large';
+        this.motionDescriptionEl.className = 'motion-description-large';
+
+        let fallbackIcon = '⚪';
+        let description;
+        let imageUrl = null;
+
+        // Extract image name (remove " - BAD MOVEMENT" suffix if present)
+        const imageName = motionAlert.replace(/ - BAD MOVEMENT$/i, '');
+
+        // Debug
+        if (this.debugMode) {
+          this.debugAlertEl.textContent = imageName;
+        }
+
+        // Look for corresponding image in assets using the clean image name
+        if (this.availableAssets.has(imageName)) {
+          imageUrl = `/assets/${imageName}.png`;
+          description = motionAlert; // Keep the full alert with BAD MOVEMENT
+        } else {
+          // Just use the raw alert
+          fallbackIcon = '❓';
+          description = motionAlert;
+        }
+
+        // Debug
+        if (this.debugMode) {
+          this.debugImageEl.textContent = imageUrl || 'Fallback';
+        }
+
+        // Apply changes
+        this.motionDescriptionEl.textContent = description;
+
+        if (imageUrl) {
+          this.motionImageEl.src = imageUrl;
+          this.motionImageEl.style.display = 'block';
+          this.motionFallbackEl.style.display = 'none';
+
+          // Handle image loading error
+          this.motionImageEl.onerror = () => {
+            console.warn('❌ Cannot load image:', imageUrl);
+            this.motionImageEl.style.display = 'none';
+            this.motionFallbackEl.style.display = 'flex';
+            this.motionFallbackEl.textContent = fallbackIcon;
+            this.motionVisualEl.classList.add('no-image');
+          };
+        } else {
+          // Use fallback
+          this.motionImageEl.style.display = 'none';
+          this.motionFallbackEl.style.display = 'flex';
+          this.motionFallbackEl.textContent = fallbackIcon;
+          this.motionVisualEl.classList.add('no-image');
+        }
+      }
+
+      formatMotionDescription(motionAlert) {
+        // Convert filename to readable description
+        const parts = motionAlert.split('_');
+        if (parts.length >= 2) {
+          const direction = parts[0]; // down, high, mid
+          const position = parts[1]; // center, left, right
+          const level = parts[2] || ''; // 0, 1, 2, etc.
+
+          let directionText = '';
+          switch (direction) {
+            case 'down': directionText = 'Head down'; break;
+            case 'high': directionText = 'Head up'; break;
+            case 'mid': directionText = 'Mid position'; break;
+            default: directionText = direction;
+          }
+
+          let positionText = '';
+          switch (position) {
+            case 'center': positionText = 'center'; break;
+            case 'left': positionText = 'left'; break;
+            case 'right': positionText = 'right'; break;
+            default: positionText = position;
+          }
+
+          const levelText = level ? ' (' + level + ')' : '';
+          return `${directionText} ${positionText}${levelText}`;
+        }
+        
+        return motionAlert;
+      }
+
+      updateStatus(message, type = '') {
+        this.statusEl.textContent = message;
+        this.statusEl.className = `status ${type}`;
+      }
+
+      async refresh() {
+        const data = await this.fetchData();
+        if (data) {
+          this.updateMotionIndicator(data.motionalert);
+          
+          if (this.isRecording) {
+            await this.recordDataPoint();
+          }
+        }
+      }
+
+      start() {
+        this.refresh();
+        this.timer = setInterval(() => this.refresh(), this.intervalMs);
+      }
+
+      stop() {
+        if (this.timer) {
+          clearInterval(this.timer);
+          this.timer = null;
+        }
+        
+        if (this.recordingTimer) {
+          clearInterval(this.recordingTimer);
+        }
+      }
+    }
+
+    // Automatic startup
+    document.addEventListener('DOMContentLoaded', () => {
+      window.dashboard = new MotionOnlyDashboard('/api/sensor-data', 1000);
+      window.dashboard.start();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (window.dashboard) {
+        window.dashboard.stop();
+      }
+    });
+  </script>
+</body>
+</html>

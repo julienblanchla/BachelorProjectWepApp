@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nordic Thingy Dashboard - Sensors</title>
+  <link rel="stylesheet" href="/style/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>🔬 Nordic Thingy Dashboard - Real-Time Sensors</h1>
+  
+  <!-- Navigation Menu -->
+  <div class="navigation">
+    <a href="/" class="nav-btn active">
+      🏠 Dashboard
+    </a>
+    <a href="/chart" class="nav-btn">
+      📈 Chart
+    </a>
+    <a href="/sensors" class="nav-btn">
+      🌡️ Sensors
+    </a>
+    <a href="/motion" class="nav-btn">
+      🏃 Motion
+    </a>
+    <a href="/patients" class="nav-btn">
+      👥 Patients
+    </a>
+  </div>
+  
+  <div class="main-container">
+    <!-- Recording section moved to top -->
+    <div class="recording-section">
+      <div class="recording-left">
+        <h2>📹 Recording</h2>
+        <div class="recording-status idle" id="recordingStatus">
+          🔴 Ready
+        </div>
+      </div>
+      
+      <div class="recording-center">
+        <button class="btn btn-start" id="startBtn">
+          ▶️ Start
+        </button>
+        <button class="btn btn-stop" id="stopBtn" disabled>
+          ⏹️ Stop
+        </button>
+        <button class="btn btn-download" id="downloadBtn" disabled>
+          💾 CSV
+        </button>
+      </div>
+
+      <div class="recording-right" id="recordingInfo" style="display: none;">
+        <div class="recording-info-item">
+          <strong id="recordingDuration">0:00</strong>
+          <span>Duration</span>
+        </div>
+        <div class="recording-info-item">
+          <strong id="recordingCount">0</strong>
+          <span>Points</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content grid -->
+    <div class="chart-container">
+      <canvas id="accelChart"></canvas>
+    </div>
+    
+    <div class="data-list">
+      <h2>📊 Sensor Data</h2>
+      <div class="sensor-grid" id="sensorGrid">
+        <!-- Cards will be added dynamically -->
+      </div>
+    </div>
+
+    <div class="motion-indicator">
+      <div class="motion-title">🏃 Motion</div>
+      <div id="motionVisual" class="motion-visual neutral">
+        <img id="motionImage" src="" alt="Avatar" style="display: none;">
+        <span id="motionFallback">⚪</span>
+      </div>
+      <div id="motionDescription" class="motion-description neutral">
+        Waiting...
+      </div>
+    </div>
+  </div>
+
+  <script>
+class SensorDashboard {
+    constructor(apiUrl, intervalMs = 1000) {
+      this.apiUrl = apiUrl;
+      this.intervalMs = intervalMs;
+      this.maxPoints = 50;
+      this.timer = null;
+      this.statusEl = document.getElementById('status');
+      this.sensorGridEl = document.getElementById('sensorGrid');
+      this.motionVisualEl = document.getElementById('motionVisual');
+      this.motionDescriptionEl = document.getElementById('motionDescription');
+      this.motionImageEl = document.getElementById('motionImage');
+      this.motionFallbackEl = document.getElementById('motionFallback');
+      this.errorCount = 0;
+      this.successCount = 0;
+      
+      // Recording variables
+      this.isRecording = false;
+      this.currentSessionId = null;
+      this.recordingStartTime = null;
+      this.recordingTimer = null;
+      this.recordingCount = 0;
+      this.downloadUrl = null;
+      
+      // Load available assets
+      this.availableAssets = new Set();
+      this.loadAvailableAssets();
+      
+      this.initChart();
+      this.initSensorCards();
+      this.initRecordingControls();
+    }
+
+    async loadAvailableAssets() {
+      try {
+        const response = await fetch('/api/assets');
+        if (response.ok) {
+          const assets = await response.json();
+          assets.forEach(asset => {
+            this.availableAssets.add(asset.name);
+          });
+          console.log('✅ Assets loaded:', Array.from(this.availableAssets));
+        }
+      } catch (error) {
+        console.error('❌ Asset loading error:', error);
+      }
+    }
+
+    initRecordingControls() {
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      startBtn.addEventListener('click', () => this.startRecording());
+      stopBtn.addEventListener('click', () => this.stopRecording());
+      downloadBtn.addEventListener('click', () => this.downloadSession());
+    }
+
+    async startRecording() {
+      try {
+        const response = await fetch('/api/sessions/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+          throw new Error('Error creating session');
+        }
+
+        const result = await response.json();
+        this.currentSessionId = result.sessionId;
+        this.isRecording = true;
+        this.recordingStartTime = Date.now();
+        this.recordingCount = 0;
+
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        document.getElementById('downloadBtn').disabled = true;
+        
+        const statusEl = document.getElementById('recordingStatus');
+        statusEl.textContent = '🔴 Recording...';
+        statusEl.className = 'recording-status recording';
+
+        document.getElementById('recordingInfo').style.display = 'flex';
+
+        this.recordingTimer = setInterval(() => {
+          this.updateRecordingDisplay();
+        }, 1000);
+
+      } catch (error) {
+        // Remove alert - just log error
+        console.error('Recording start error:', error);
+      }
+    }
+
+    async stopRecording() {
+      if (!this.isRecording || !this.currentSessionId) return;
+
+      try {
+        const response = await fetch(`/api/sessions/${this.currentSessionId}/stop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+          throw new Error('Error stopping session');
+        }
+
+        const result = await response.json();
+        this.downloadUrl = result.downloadUrl;
+
+        this.isRecording = false;
+        clearInterval(this.recordingTimer);
+
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('downloadBtn').disabled = false;
+        
+        const statusEl = document.getElementById('recordingStatus');
+        statusEl.textContent = `✅ Completed (${this.recordingCount})`;
+        statusEl.className = 'recording-status stopped';
+
+      } catch (error) {
+        // Remove alert - just log error
+        console.error('Recording stop error:', error);
+      }
+    }
+
+    downloadSession() {
+      if (this.downloadUrl) {
+        const link = document.createElement('a');
+        link.href = this.downloadUrl;
+        link.download = `${this.currentSessionId}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
+    updateRecordingDisplay() {
+      if (!this.isRecording) return;
+
+      const duration = Math.floor((Date.now() - this.recordingStartTime) / 1000);
+      const minutes = Math.floor(duration / 60);
+      const seconds = duration % 60;
+      
+      document.getElementById('recordingDuration').textContent = 
+        `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      document.getElementById('recordingCount').textContent = this.recordingCount;
+    }
+
+    async recordDataPoint() {
+      if (!this.isRecording || !this.currentSessionId) return;
+
+      try {
+        const response = await fetch(`/api/sessions/${this.currentSessionId}/record`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+          this.recordingCount++;
+        }
+      } catch (error) {
+        // Silent error handling
+      }
+    }
+
+    initChart() {
+      const ctx = document.getElementById('accelChart').getContext('2d');
+      
+      this.chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array(this.maxPoints).fill(''),
+          datasets: [
+            {
+              label: 'X',
+              data: Array(this.maxPoints).fill(0),
+              borderColor: '#ff6384',
+              backgroundColor: 'rgba(255, 99, 132, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: false,
+              pointRadius: 0
+            },
+            {
+              label: 'Y',
+              data: Array(this.maxPoints).fill(0),
+              borderColor: '#36a2eb',
+              backgroundColor: 'rgba(54, 162, 235, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: false,
+              pointRadius: 0
+            },
+            {
+              label: 'Z',
+              data: Array(this.maxPoints).fill(0),
+              borderColor: '#4bc0c0',
+              backgroundColor: 'rgba(75, 192, 192, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: false,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: {
+            intersect: false,
+          },
+          scales: {
+            x: { display: false },
+            y: {
+              title: { display: true, text: 'Acceleration (g)', font: { size: 11 } },
+              suggestedMin: -2,
+              suggestedMax: 2,
+              grid: { color: 'rgba(0,0,0,0.1)' },
+              ticks: { font: { size: 10 } }
+            }
+          },
+          plugins: {
+            legend: { 
+              position: 'top', 
+              labels: { boxWidth: 10, padding: 15, font: { size: 11 } }
+            },
+            title: { 
+              display: true, 
+              text: 'Accelerometer',
+              font: { size: 13, weight: 'normal' }
+            }
+          }
+        }
+      });
+    }
+
+    initSensorCards() {
+      this.sensorGridEl.innerHTML = `
+        <div class="sensor-card accelerometer">
+          <div class="sensor-title">🏃 Accelerometer</div>
+          <div class="sensor-value" id="accel-x">X: --</div>
+          <div class="sensor-value" id="accel-y">Y: --</div>
+          <div class="sensor-value" id="accel-z">Z: --</div>
+        </div>
+        
+        <div class="sensor-card temperature">
+          <div class="sensor-title">🌡️ Temperature</div>
+          <div class="sensor-value" id="temperature">-- °C</div>
+          <div class="alert-message" id="temp-alert"></div>
+        </div>
+        
+        <div class="sensor-card humidity">
+          <div class="sensor-title">💧 Humidity</div>
+          <div class="sensor-value" id="humidity">-- %</div>
+          <div class="alert-message" id="humidity-alert"></div>
+        </div>
+        
+        <div class="sensor-card air-quality">
+          <div class="sensor-title">🌬️ Air Quality</div>
+          <div class="sensor-value" id="co2">CO₂: --</div>
+          <div class="sensor-value" id="tvoc">TVOC: --</div>
+          <div class="alert-message" id="air-alert"></div>
+        </div>
+        
+        <div class="sensor-card alerts">
+          <div class="sensor-title">⚠️ Alerts</div>
+          <div class="alert-message" id="motion-alert"></div>
+          <div class="sensor-timestamp" id="timestamp">Last Update: --</div>
+        </div>
+      `;
+    }
+
+    async fetchData() {
+      try {
+        const response = await fetch(this.apiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        let data = await response.json();
+        
+        if (typeof data === 'string') {
+          data = JSON.parse(data);
+        }
+        
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid format');
+        }
+        
+        this.successCount++;
+        this.errorCount = 0;
+        
+        return data;
+        
+      } catch (error) {
+        this.errorCount++;
+        this.updateStatus(`❌ Error: ${error.message}`, 'error');
+        return null;
+      }
+    }
+
+    updateChart(data) {
+      if (!data || !data.accelerometer) return;
+      
+      const { x, y, z } = data.accelerometer;
+      
+      this.chart.data.datasets[0].data.push(x);
+      this.chart.data.datasets[1].data.push(y);
+      this.chart.data.datasets[2].data.push(z);
+      
+      this.chart.data.datasets.forEach(dataset => {
+        if (dataset.data.length > this.maxPoints) {
+          dataset.data.shift();
+        }
+      });
+      
+      this.chart.update('none');
+    }
+
+    updateMotionIndicator(motionAlert) {
+      if (!motionAlert) return;
+
+      // Clear existing classes
+      this.motionVisualEl.className = 'motion-visual';
+      this.motionDescriptionEl.className = 'motion-description';
+
+      let fallbackIcon = '⚪';
+      let description = motionAlert;
+      let imageUrl = null;
+
+      // Extract image name (remove " - BAD MOVEMENT" suffix if present)
+      const imageName = motionAlert.replace(/ - BAD MOVEMENT$/i, '');
+
+      // Look for corresponding image in assets using the clean image name
+      if (this.availableAssets.has(imageName)) {
+        imageUrl = `/assets/${imageName}.png`;
+        description = motionAlert; // Keep the full alert with BAD MOVEMENT
+      } else {
+        // Fallback - just use the raw alert
+        fallbackIcon = '❓';
+        description = motionAlert;
+      }
+
+      // Apply changes (without animation class)
+      this.motionVisualEl.className = 'motion-visual'; // No animation class
+      this.motionDescriptionEl.textContent = description;
+
+      if (imageUrl) {
+        this.motionImageEl.src = imageUrl;
+        this.motionImageEl.style.display = 'block';
+        this.motionFallbackEl.style.display = 'none';
+
+        // Handle image loading error
+        this.motionImageEl.onerror = () => {
+          console.warn('❌ Cannot load image:', imageUrl);
+          this.motionImageEl.style.display = 'none';
+          this.motionFallbackEl.style.display = 'flex';
+          this.motionFallbackEl.textContent = fallbackIcon;
+          this.motionVisualEl.classList.add('no-image');
+        };
+      } else {
+        // Use fallback
+        this.motionImageEl.style.display = 'none';
+        this.motionFallbackEl.style.display = 'flex';
+        this.motionFallbackEl.textContent = fallbackIcon;
+        this.motionVisualEl.classList.add('no-image');
+      }
+    }
+
+    formatMotionDescription(motionAlert) {
+      // Convert filename to readable description
+      const parts = motionAlert.split('_');
+      if (parts.length >= 2) {
+        const direction = parts[0]; // down, high, mid
+        const position = parts[1]; // center, left, right
+        const level = parts[2] || ''; // 0, 1, 2, etc.
+
+        let directionText = '';
+        switch (direction) {
+          case 'down': directionText = 'Head down'; break;
+          case 'high': directionText = 'Head up'; break;
+          case 'mid': directionText = 'Mid position'; break;
+          default: directionText = direction;
+        }
+
+        let positionText = '';
+        switch (position) {
+          case 'center': positionText = 'center'; break;
+          case 'left': positionText = 'left'; break;
+          case 'right': positionText = 'right'; break;
+          default: positionText = position;
+        }
+
+        return `${directionText} - ${positionText}${level ? ` (${level})` : ''}`;
+      }
+      
+      return motionAlert;
+    }
+
+    updateSensorCards(data) {
+      if (!data) return;
+      
+      if (data.accelerometer) {
+        document.getElementById('accel-x').textContent = `X: ${data.accelerometer.x.toFixed(2)}`;
+        document.getElementById('accel-y').textContent = `Y: ${data.accelerometer.y.toFixed(2)}`;
+        document.getElementById('accel-z').textContent = `Z: ${data.accelerometer.z.toFixed(2)}`;
+      }
+
+      if (data.temperature !== undefined) {
+        document.getElementById('temperature').textContent = `${data.temperature.toFixed(1)} °C`;
+        const tempAlert = document.getElementById('temp-alert');
+        tempAlert.textContent = data.temperaturealert || '';
+        tempAlert.className = this.getAlertClass(data.temperaturealert);
+      }
+
+      if (data.humidity !== undefined) {
+        document.getElementById('humidity').textContent = `${data.humidity} %`;
+        const humAlert = document.getElementById('humidity-alert');
+        humAlert.textContent = data.humidityalert || '';
+        humAlert.className = this.getAlertClass(data.humidityalert);
+      }
+
+      if (data.air_quality) {
+        document.getElementById('co2').textContent = `CO₂: ${data.air_quality.CO2}`;
+        document.getElementById('tvoc').textContent = `TVOC: ${data.air_quality.TVOC}`;
+        const airAlert = document.getElementById('air-alert');
+        airAlert.textContent = data.air_qualityalert || '';
+        airAlert.className = this.getAlertClass(data.air_qualityalert);
+      }
+
+      const motionAlert = document.getElementById('motion-alert');
+      motionAlert.textContent = data.motionalert || '';
+      motionAlert.className = this.getAlertClass(data.motionalert);
+      
+      this.updateMotionIndicator(data.motionalert);
+
+      if (data.timestamp) {
+        document.getElementById('timestamp').textContent = `Update: ${new Date().toLocaleTimeString()}`;
+      }
+    }
+
+    getAlertClass(alertText) {
+      if (!alertText) return 'alert-message';
+      
+      const text = alertText.toLowerCase();
+      if (text.includes('no alert') || text.includes('good')) {
+        return 'alert-message good';
+      } else if (text.includes('poor') || text.includes('bad') || text.includes('high')) {
+        return 'alert-message danger';
+      } else {
+        return 'alert-message warning';
+      }
+    }
+
+    updateStatus(message, type = '') {
+      this.statusEl.textContent = message;
+      this.statusEl.className = `status ${type}`;
+    }
+
+    async refresh() {
+      const data = await this.fetchData();
+      if (data) {
+        this.updateChart(data);
+        this.updateSensorCards(data);
+        
+        if (this.isRecording) {
+          await this.recordDataPoint();
+        }
+      }
+    }
+
+    start() {
+      this.refresh();
+      this.timer = setInterval(() => this.refresh(), this.intervalMs);
+    }
+
+    stop() {
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+      
+      if (this.recordingTimer) {
+        clearInterval(this.recordingTimer);
+      }
+    }
+  }
+
+  // Automatic startup
+  document.addEventListener('DOMContentLoaded', () => {
+    window.dashboard = new SensorDashboard('/api/sensor-data', 1000);
+    window.dashboard.start();
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (window.dashboard) {
+      window.dashboard.stop();
+    }
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Exercises - Nordic Thingy</title>
+  <link rel="stylesheet" href="/style/style.css">
+  <style>
+    .exercises-container {
+      height: calc(100vh - 100px);
+      display: flex;
+      flex-direction: column;
+      max-width: 1200px;
+      margin: 0 auto;
+      gap: 1rem;
+    }
+
+    .exercises-header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .patient-info-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .patient-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #007bff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .patient-avatar-placeholder {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #666;
+      border: 3px solid #ddd;
+    }
+
+    .patient-details h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: #333;
+    }
+
+    .patient-id-badge {
+      font-size: 0.8rem;
+      color: #666;
+      background: rgba(0, 123, 255, 0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-top: 0.2rem;
+    }
+
+    .btn-back {
+      padding: 0.8rem 1.5rem;
+      background: linear-gradient(135deg, #6c757d, #495057);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      box-shadow: 0 3px 12px rgba(108, 117, 125, 0.3);
+    }
+
+    .btn-back:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    }
+
+    .exercises-content {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .exercises-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .exercises-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+      flex: 1;
+      align-items: start;
+      overflow-y: auto; /* Add scrollbar to the grid container */
+      padding-right: 0.5rem; /* Add padding for scrollbar */
+    }
+
+    /* Custom scrollbar for exercises grid */
+    .exercises-grid::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .exercises-grid::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.05);
+      border-radius: 4px;
+    }
+
+    .exercises-grid::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 4px;
+    }
+
+    .exercises-grid::-webkit-scrollbar-thumb:hover {
+      background: rgba(0,0,0,0.4);
+    }
+
+    .exercise-card {
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border-radius: 16px;
+      padding: 2rem;
+      border-left: 6px solid #28a745;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      height: fit-content;
+      max-height: 600px; /* Add maximum height */
+      overflow-y: auto; /* Add vertical scrollbar */
+    }
+
+    /* Custom scrollbar styling for webkit browsers */
+    .exercise-card::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .exercise-card::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.1);
+      border-radius: 4px;
+    }
+
+    .exercise-card::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+    }
+
+    .exercise-card::-webkit-scrollbar-thumb:hover {
+      background: rgba(0,0,0,0.5);
+    }
+
+    .exercise-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .exercise-icon {
+      font-size: 3rem;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ffffff, #f8f9fa);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+
+    .exercise-info h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #333;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .exercise-duration {
+      font-size: 1rem;
+      color: #666;
+      background: rgba(0, 123, 255, 0.1);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    .exercise-description {
+      font-size: 1rem;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .exercise-steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .exercise-steps li {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      border-left: 3px solid #007bff;
+      font-size: 0.95rem;
+      color: #333;
+      position: relative;
+      padding-left: 2.5rem;
+    }
+
+    .exercise-steps li::before {
+      content: counter(step-counter);
+      counter-increment: step-counter;
+      position: absolute;
+      left: 0.8rem;
+      top: 0.8rem;
+      background: #007bff;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .exercise-steps {
+      counter-reset: step-counter;
+    }
+
+    .head-rotation .exercise-steps li::before {
+      background: #28a745;
+    }
+
+    .head-rotation .exercise-steps li {
+      border-left-color: #28a745;
+    }
+
+    .exercise-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: auto;
+    }
+
+    .btn-exercise {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-start-exercise {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+    }
+
+    .btn-view-guide {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+    }
+
+    .btn-exercise:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+
+    .exercise-benefits {
+      background: rgba(40, 167, 69, 0.1);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    .exercise-benefits h4 {
+      margin: 0 0 0.5rem 0;
+      color: #28a745;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .exercise-benefits ul {
+      margin: 0;
+      padding-left: 1.2rem;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .exercise-benefits li {
+      margin-bottom: 0.3rem;
+    }
+
+    @media (max-width: 768px) {
+      .exercises-container {
+        height: calc(100vh - 80px);
+        gap: 0.5rem;
+      }
+
+      .exercises-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 1rem;
+      }
+
+      .patient-info-header {
+        justify-content: center;
+      }
+
+      .exercises-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .exercise-card {
+        padding: 1.5rem;
+        max-height: 500px; /* Reduce max height on mobile */
+      }
+
+      .exercise-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .exercise-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+      }
+
+      .exercise-actions {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .exercises-content {
+        padding: 1rem;
+      }
+
+      .exercise-card {
+        padding: 1rem;
+        max-height: 400px; /* Further reduce on small screens */
+      }
+
+      .exercises-title {
+        font-size: 1.5rem;
+      }
+
+      .exercise-info h3 {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🏃‍♂️ Patient Exercises - Nordic Thingy</h1>
+  
+  <div class="exercises-container">
+    <div class="navigation">
+      <a href="/" class="nav-btn">🏠 Dashboard</a>
+      <a href="/chart" class="nav-btn">📈 Chart</a>
+      <a href="/sensors" class="nav-btn">🌡️ Sensors</a>
+      <a href="/motion" class="nav-btn">🏃 Motion</a>
+      <a href="/patients" class="nav-btn">👥 Patients</a>
+    </div>
+
+    <div class="exercises-header">
+      <div class="patient-info-header">
+        <div id="patientAvatar" class="patient-avatar-placeholder">
+          👤
+        </div>
+        <div class="patient-details">
+          <h2 id="patientName">Loading...</h2>
+          <div class="patient-id-badge" id="patientId">ID: ...</div>
+        </div>
+      </div>
+      <a href="/patients" class="btn-back">
+        ← Back to Patients
+      </a>
+    </div>
+
+    <div class="exercises-content">
+      <h2 class="exercises-title">🏃‍♂️ Recommended Exercises</h2>
+      
+      <div class="exercises-grid">
+        <!-- Neck Extension Exercise -->
+        <div class="exercise-card neck-extension">
+          <div class="exercise-header">
+            <div class="exercise-icon">
+              🔵
+            </div>
+            <div class="exercise-info">
+              <h3>Neck Extension</h3>
+              <span class="exercise-duration">⏱️ 5-10 minutes</span>
+            </div>
+          </div>
+          
+          <div class="exercise-description">
+            Improve neck mobility and strengthen posterior neck muscles through controlled extension movements.
+          </div>
+          
+          <ol class="exercise-steps">
+            <li>Sit upright with shoulders relaxed</li>
+            <li>Slowly tilt your head back, looking toward the ceiling</li>
+            <li>Hold the position for 5-10 seconds</li>
+            <li>Return to neutral position slowly</li>
+            <li>Repeat 8-12 times</li>
+            <li>Rest for 30 seconds between sets</li>
+          </ol>
+          
+          <div class="exercise-benefits">
+            <h4>💡 Benefits:</h4>
+            <ul>
+              <li>Improves neck extension range of motion</li>
+              <li>Strengthens deep neck flexors</li>
+              <li>Reduces forward head posture</li>
+              <li>Alleviates neck tension</li>
+            </ul>
+          </div>
+          
+          <div class="exercise-actions">
+            <button class="btn-exercise btn-start-exercise" onclick="startExercise('neck-extension')">
+              ▶️ Start Exercise
+            </button>
+            <button class="btn-exercise btn-view-guide" onclick="viewGuide('neck-extension')">
+              📖 View Guide
+            </button>
+          </div>
+        </div>
+
+        <!-- Head Rotation Exercise -->
+        <div class="exercise-card head-rotation">
+          <div class="exercise-header">
+            <div class="exercise-icon">
+              🟢
+            </div>
+            <div class="exercise-info">
+              <h3>Head Rotation</h3>
+              <span class="exercise-duration">⏱️ 5-8 minutes</span>
+            </div>
+          </div>
+          
+          <div class="exercise-description">
+            Enhance cervical rotation mobility and improve neck flexibility through controlled rotational movements.
+          </div>
+          
+          <ol class="exercise-steps">
+            <li>Sit comfortably with spine straight</li>
+            <li>Keep shoulders level and relaxed</li>
+            <li>Slowly turn head to the right</li>
+            <li>Hold for 5-8 seconds</li>
+            <li>Return to center position</li>
+            <li>Repeat to the left side</li>
+            <li>Complete 6-10 rotations each direction</li>
+          </ol>
+          
+          <div class="exercise-benefits">
+            <h4>💡 Benefits:</h4>
+            <ul>
+              <li>Increases cervical rotation mobility</li>
+              <li>Improves neck muscle coordination</li>
+              <li>Reduces stiffness and tension</li>
+              <li>Enhances daily functional movements</li>
+            </ul>
+          </div>
+          
+          <div class="exercise-actions">
+            <button class="btn-exercise btn-start-exercise" onclick="startExercise('head-rotation')">
+              ▶️ Start Exercise
+            </button>
+            <button class="btn-exercise btn-view-guide" onclick="viewGuide('head-rotation')">
+              📖 View Guide
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class ExercisesManager {
+      constructor() {
+        this.patientId = this.getPatientIdFromUrl();
+        this.patient = null;
+        this.loadPatientInfo();
+      }
+
+      getPatientIdFromUrl() {
+        const path = window.location.pathname;
+        const matches = path.match(/\/exercises\/(.+)$/);
+        return matches ? matches[1] : null;
+      }
+
+      loadPatientInfo() {
+        if (!this.patientId) {
+          console.error('No patient ID found in URL');
+          return;
+        }
+
+        // Load patients from localStorage
+        const stored = localStorage.getItem('nordic-thingy-patients');
+        const patients = stored ? JSON.parse(stored) : [];
+        
+        this.patient = patients.find(p => p.id === this.patientId);
+        
+        if (this.patient) {
+          this.displayPatientInfo();
+        } else {
+          console.error('Patient not found:', this.patientId);
+          document.getElementById('patientName').textContent = 'Patient Not Found';
+          document.getElementById('patientId').textContent = 'ID: ' + this.patientId;
+        }
+      }
+
+      displayPatientInfo() {
+        const nameEl = document.getElementById('patientName');
+        const idEl = document.getElementById('patientId');
+        const avatarEl = document.getElementById('patientAvatar');
+
+        nameEl.textContent = `${this.patient.firstName} ${this.patient.lastName}`;
+        idEl.textContent = `ID: ${this.patient.id}`;
+
+        // Display patient photo if available
+        if (this.patient.photo) {
+          avatarEl.innerHTML = `<img src="${this.patient.photo}" alt="${this.patient.firstName} ${this.patient.lastName}" class="patient-avatar">`;
+        } else {
+          avatarEl.innerHTML = '👤';
+          avatarEl.className = 'patient-avatar-placeholder';
+        }
+      }
+    }
+
+    // Exercise functions
+    function startExercise(exerciseType) {
+      const exerciseNames = {
+        'neck-extension': 'Neck Extension',
+        'head-rotation': 'Head Rotation'
+      };
+      
+      const exerciseName = exerciseNames[exerciseType] || exerciseType;
+      
+      // Remove confirm dialog - start exercise directly
+      const patientId = exercisesManager.patientId;
+      // Redirect to exercise session page
+      window.location.href = `/exercise/${exerciseType}/${patientId}`;
+    }
+
+    function viewGuide(exerciseType) {
+      const guides = {
+        'neck-extension': {
+          title: 'Neck Extension Exercise Guide',
+          content: `
+📋 PREPARATION:
+• Find a comfortable chair with back support
+• Remove any neck accessories (scarves, high collars)
+• Ensure you have adequate space around you
+
+⚠️ SAFETY PRECAUTIONS:
+• Stop immediately if you experience pain
+• Move slowly and avoid sudden movements
+• Don't force the range of motion
+• Keep breathing throughout the exercise
+
+🎯 PROPER TECHNIQUE:
+• Keep shoulders relaxed and level
+• Move only your head, not your whole body
+• Maintain control throughout the movement
+• Focus on smooth, deliberate motions
+
+📊 PROGRESSION:
+• Week 1-2: 5-8 repetitions
+• Week 3-4: 8-10 repetitions  
+• Week 5+: 10-12 repetitions
+• Increase hold time gradually from 5 to 10 seconds
+          `
+        },
+        'head-rotation': {
+          title: 'Head Rotation Exercise Guide',
+          content: `
+📋 PREPARATION:
+• Sit upright with feet flat on the floor
+• Adjust chair height so thighs are parallel to ground
+• Place hands comfortably on your lap
+
+⚠️ SAFETY PRECAUTIONS:
+• Never force rotation beyond comfortable range
+• Stop if you feel dizzy or nauseous
+• Avoid jerky or rapid movements
+• Don't rotate if you have acute neck pain
+
+🎯 PROPER TECHNIQUE:
+• Keep chin level throughout rotation
+• Turn head as if looking over your shoulder
+• Maintain upright posture of spine
+• Feel gentle stretch, not strain
+
+📊 PROGRESSION:
+• Week 1-2: 4-6 rotations each side
+• Week 3-4: 6-8 rotations each side
+• Week 5+: 8-10 rotations each side
+• Gradually increase range of motion
+          `
+        }
+      };
+
+      const guide = guides[exerciseType];
+      if (guide) {
+        // Remove alert - display guide in console or create a modal
+        console.log(`${guide.title}\n\n${guide.content}`);
+        // Alternatively, you could create a proper modal instead of alert
+      }
+    }
+
+    // Initialize the exercises manager
+    let exercisesManager;
+    document.addEventListener('DOMContentLoaded', () => {
+      exercisesManager = new ExercisesManager();
+    });
+  </script>
+</body>
+</html>

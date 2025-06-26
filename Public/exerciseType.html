@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Exercise Session - Nordic Thingy</title>
+  <link rel="stylesheet" href="/style/style.css">
+  <style>
+    .exercise-session-container {
+      height: calc(100vh - 100px);
+      display: flex;
+      flex-direction: column;
+      max-width: 1000px;
+      margin: 0 auto;
+      gap: 1rem;
+    }
+
+    .exercise-header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .exercise-info {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .exercise-icon {
+      font-size: 4rem;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ffffff, #f8f9fa);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    .exercise-details h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 2rem;
+      color: #333;
+    }
+
+    .exercise-patient {
+      font-size: 1rem;
+      color: #666;
+      background: rgba(0, 123, 255, 0.1);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+    }
+
+    .exercise-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn-exercise-action {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    .btn-start-session {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+    }
+
+    .btn-stop-session {
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      color: white;
+    }
+
+    .btn-download-session {
+      background: linear-gradient(135deg, #17a2b8, #138496);
+      color: white;
+    }
+
+    .btn-back-exercises {
+      background: linear-gradient(135deg, #6c757d, #495057);
+      color: white;
+      text-decoration: none;
+    }
+
+    .btn-exercise-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+
+    .motion-display {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 0;
+    }
+
+    .motion-visual-large {
+      width: 300px;
+      height: 300px;
+      border-radius: 16px;
+      margin: 1.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border: 4px solid rgba(255, 255, 255, 0.9);
+    }
+
+    .motion-visual-large img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    .motion-visual-large.no-image {
+      font-size: 5rem;
+      color: #666;
+      font-weight: bold;
+    }
+
+    .motion-description-large {
+      font-size: 1.3rem;
+      color: #666;
+      margin-top: 1rem;
+      padding: 1.2rem;
+      background: rgba(248, 249, 250, 0.8);
+      border-radius: 10px;
+      border-left: 4px solid #e9ecef;
+      max-width: 400px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .exercise-status {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .status-info {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .status-item {
+      text-align: center;
+      background: rgba(248, 249, 250, 0.8);
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      min-width: 80px;
+    }
+
+    .status-item strong {
+      display: block;
+      color: #007bff;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .status-message {
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      background: rgba(248, 249, 250, 0.8);
+    }
+
+    .status-message.waiting {
+      color: #666;
+      background: rgba(248, 249, 250, 0.8);
+    }
+
+    .status-message.active {
+      color: #28a745;
+      background: rgba(40, 167, 69, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .exercise-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .exercise-info {
+        flex-direction: column;
+      }
+
+      .exercise-controls {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .motion-visual-large {
+        width: 250px;
+        height: 250px;
+      }
+
+      .exercise-status {
+        flex-direction: column;
+      }
+
+      .status-info {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🏃‍♂️ Exercise Session - Nordic Thingy</h1>
+  
+  <div class="exercise-session-container">
+    <div class="navigation">
+      <a href="/" class="nav-btn">🏠 Dashboard</a>
+      <a href="/chart" class="nav-btn">📈 Chart</a>
+      <a href="/sensors" class="nav-btn">🌡️ Sensors</a>
+      <a href="/motion" class="nav-btn">🏃 Motion</a>
+      <a href="/patients" class="nav-btn">👥 Patients</a>
+    </div>
+
+    <div class="exercise-header">
+      <div class="exercise-info">
+        <div class="exercise-icon" id="exerciseIcon">🔵</div>
+        <div class="exercise-details">
+          <h1 id="exerciseName">Loading Exercise...</h1>
+          <div class="exercise-patient" id="patientInfo">Patient: Loading...</div>
+        </div>
+      </div>
+      <div class="exercise-controls">
+        <button class="btn-exercise-action btn-start-session" id="startExerciseBtn">
+          ▶️ Start Exercise
+        </button>
+        <button class="btn-exercise-action btn-stop-session" id="stopExerciseBtn" style="display: none;">
+          ⏹️ Stop Exercise
+        </button>
+        <button class="btn-exercise-action btn-download-session" id="downloadBtn" style="display: none;">
+          💾 Download CSV
+        </button>
+        <a href="#" class="btn-exercise-action btn-back-exercises" id="backBtn">
+          ← Back to Exercises
+        </a>
+      </div>
+    </div>
+
+    <div class="motion-display">
+      <div id="motionVisual" class="motion-visual-large neutral">
+        <img id="motionImage" src="" alt="Motion" style="display: none;">
+        <span id="motionFallback">⚪</span>
+      </div>
+      <div id="motionDescription" class="motion-description-large neutral">
+        Ready to start exercise...
+      </div>
+    </div>
+
+    <div class="exercise-status">
+      <div class="status-info" id="statusInfo" style="display: none;">
+        <div class="status-item">
+          <strong id="remainingTime">2:00</strong>
+          <span>Remaining</span>
+        </div>
+        <div class="status-item">
+          <strong id="movementCount">0</strong>
+          <span>Movements</span>
+        </div>
+        <div class="status-item">
+          <strong id="correctCount">0</strong>
+          <span>Correct</span>
+        </div>
+        <div class="status-item">
+          <strong id="incorrectCount">0</strong>
+          <span>Incorrect</span>
+        </div>
+      </div>
+      <div class="status-message waiting" id="statusMessage">
+        Click "Start Exercise" to begin 2-minute motion tracking and recording
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class ExerciseSession {
+      constructor() {
+        this.exerciseType = this.getExerciseTypeFromUrl();
+        this.patientId = this.getPatientIdFromUrl();
+        this.patient = null;
+        this.isActive = false;
+        this.startTime = null;
+        this.movementCount = 0;
+        this.correctCount = 0;
+        this.incorrectCount = 0;
+        this.timer = null;
+        this.updateTimer = null;
+        this.exerciseTimer = null;
+        this.exerciseDuration = 120; // 2 minutes in seconds
+        this.currentSessionId = null;
+        this.isRecording = false;
+        this.downloadUrl = null;
+        
+        // DOM elements
+        this.exerciseIconEl = document.getElementById('exerciseIcon');
+        this.exerciseNameEl = document.getElementById('exerciseName');
+        this.patientInfoEl = document.getElementById('patientInfo');
+        this.startBtnEl = document.getElementById('startExerciseBtn');
+        this.stopBtnEl = document.getElementById('stopExerciseBtn');
+        this.downloadBtnEl = document.getElementById('downloadBtn');
+        this.backBtnEl = document.getElementById('backBtn');
+        this.motionVisualEl = document.getElementById('motionVisual');
+        this.motionDescriptionEl = document.getElementById('motionDescription');
+        this.motionImageEl = document.getElementById('motionImage');
+        this.motionFallbackEl = document.getElementById('motionFallback');
+        this.statusInfoEl = document.getElementById('statusInfo');
+        this.statusMessageEl = document.getElementById('statusMessage');
+        
+        // Available assets
+        this.availableAssets = new Set();
+        
+        this.init();
+      }
+
+      getExerciseTypeFromUrl() {
+        const path = window.location.pathname;
+        const matches = path.match(/\/exercise\/([^\/]+)\/(.+)$/);
+        return matches ? matches[1] : null;
+      }
+
+      getPatientIdFromUrl() {
+        const path = window.location.pathname;
+        const matches = path.match(/\/exercise\/([^\/]+)\/(.+)$/);
+        return matches ? matches[2] : null;
+      }
+
+      async init() {
+        await this.loadAvailableAssets();
+        this.loadPatientInfo();
+        this.setupExerciseInfo();
+        this.initEventListeners();
+      }
+
+      async loadAvailableAssets() {
+        try {
+          const response = await fetch('/api/assets');
+          if (response.ok) {
+            const assets = await response.json();
+            assets.forEach(asset => {
+              this.availableAssets.add(asset.name);
+            });
+          }
+        } catch (error) {
+          console.error('❌ Asset loading error:', error);
+        }
+      }
+
+      loadPatientInfo() {
+        const stored = localStorage.getItem('nordic-thingy-patients');
+        const patients = stored ? JSON.parse(stored) : [];
+        this.patient = patients.find(p => p.id === this.patientId);
+        
+        if (this.patient) {
+          this.patientInfoEl.textContent = `Patient: ${this.patient.firstName} ${this.patient.lastName}`;
+          this.backBtnEl.href = `/exercises/${this.patientId}`;
+        } else {
+          this.patientInfoEl.textContent = `Patient: ${this.patientId}`;
+          this.backBtnEl.href = '/patients';
+        }
+      }
+
+      setupExerciseInfo() {
+        const exercises = {
+          'neck-extension': {
+            name: 'Neck Extension',
+            icon: '🔵'
+          },
+          'head-rotation': {
+            name: 'Head Rotation',
+            icon: '🟢'
+          }
+        };
+
+        const exercise = exercises[this.exerciseType];
+        if (exercise) {
+          this.exerciseNameEl.textContent = exercise.name;
+          this.exerciseIconEl.textContent = exercise.icon;
+        } else {
+          this.exerciseNameEl.textContent = 'Unknown Exercise';
+          this.exerciseIconEl.textContent = '❓';
+        }
+      }
+
+      initEventListeners() {
+        this.startBtnEl.addEventListener('click', () => this.startExercise());
+        this.stopBtnEl.addEventListener('click', () => this.stopExercise());
+        this.downloadBtnEl.addEventListener('click', () => this.downloadSession());
+      }
+
+      async startExercise() {
+        this.isActive = true;
+        this.startTime = Date.now();
+        this.movementCount = 0;
+        this.correctCount = 0;
+        this.incorrectCount = 0;
+
+        // Start recording session
+        await this.startRecording();
+
+        // Update UI
+        this.startBtnEl.style.display = 'none';
+        this.stopBtnEl.style.display = 'inline-flex';
+        this.downloadBtnEl.style.display = 'none';
+        this.statusInfoEl.style.display = 'flex';
+        this.statusMessageEl.textContent = 'Exercise in progress - 2:00 remaining';
+        this.statusMessageEl.className = 'status-message active';
+        this.motionDescriptionEl.textContent = 'Exercise started! Perform your movements...';
+
+        // Start data fetching every second
+        this.timer = setInterval(() => this.fetchMotionData(), 1000);
+        
+        // Update display every second
+        this.updateTimer = setInterval(() => this.updateDisplay(), 1000);
+        
+        // Set automatic stop after 2 minutes (120 seconds)
+        this.exerciseTimer = setTimeout(() => {
+          this.stopExercise();
+        }, this.exerciseDuration * 1000);
+
+        console.log('✅ Exercise started for 2 minutes');
+      }
+
+      async startRecording() {
+        try {
+          // Create exercise session filename with patient name, date and exercise type
+          const exerciseNames = {
+            'neck-extension': 'NeckExtension',
+            'head-rotation': 'HeadRotation'
+          };
+          
+          const patientName = this.patient ? 
+            `${this.patient.firstName}_${this.patient.lastName}` : 
+            this.patientId;
+          
+          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          const exerciseName = exerciseNames[this.exerciseType] || this.exerciseType;
+          
+          const customSessionId = `${patientName}_${today}_${exerciseName}`;
+
+          const response = await fetch('/api/sessions/start-exercise', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              sessionId: customSessionId,
+              patientId: this.patientId,
+              exerciseType: this.exerciseType,
+              patientName: patientName
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Error creating recording session');
+          }
+
+          const result = await response.json();
+          this.currentSessionId = result.sessionId;
+          this.isRecording = true;
+
+          console.log('✅ Recording started:', this.currentSessionId);
+        } catch (error) {
+          console.error('❌ Recording start error:', error);
+          // Remove alert - just log the warning
+          console.warn('Warning: Could not start recording session, but exercise will continue.');
+        }
+      }
+
+      async stopExercise() {
+        this.isActive = false;
+        
+        // Clear all timers
+        if (this.timer) {
+          clearInterval(this.timer);
+          this.timer = null;
+        }
+        if (this.updateTimer) {
+          clearInterval(this.updateTimer);
+          this.updateTimer = null;
+        }
+        if (this.exerciseTimer) {
+          clearTimeout(this.exerciseTimer);
+          this.exerciseTimer = null;
+        }
+
+        // Stop recording
+        await this.stopRecording();
+
+        // Update UI
+        this.startBtnEl.style.display = 'inline-flex';
+        this.stopBtnEl.style.display = 'none';
+        this.downloadBtnEl.style.display = 'inline-flex';
+        this.statusMessageEl.textContent = 'Exercise completed and recorded - Download available';
+        this.statusMessageEl.className = 'status-message waiting';
+        this.motionDescriptionEl.textContent = 'Exercise session ended - CSV file ready for download';
+
+        // Show summary
+        const duration = Math.floor((Date.now() - this.startTime) / 1000);
+        const accuracy = this.movementCount > 0 ? Math.round((this.correctCount / this.movementCount) * 100) : 0;
+        
+        const summaryMessage = `Exercise Summary:\n\nDuration: ${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}\nTotal Movements: ${this.movementCount}\nCorrect Movements: ${this.correctCount}\nIncorrect Movements: ${this.incorrectCount}\nAccuracy: ${accuracy}%`;
+
+        // Remove alert - just log to console
+        console.log('Exercise completed:', summaryMessage);
+        if (this.currentSessionId) {
+          console.log(`Session recorded as: ${this.currentSessionId}.csv`);
+        }
+
+        console.log('✅ Exercise completed');
+      }
+
+      async stopRecording() {
+        if (!this.isRecording || !this.currentSessionId) return;
+
+        try {
+          const response = await fetch(`/api/sessions/${this.currentSessionId}/stop`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            this.downloadUrl = result.downloadUrl;
+            console.log('✅ Recording stopped:', this.currentSessionId);
+          }
+          
+          this.isRecording = false;
+        } catch (error) {
+          console.error('❌ Recording stop error:', error);
+        }
+      }
+
+      downloadSession() {
+        if (this.downloadUrl && this.currentSessionId) {
+          const link = document.createElement('a');
+          link.href = this.downloadUrl;
+          link.download = `${this.currentSessionId}.csv`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          console.log('📥 Downloaded:', `${this.currentSessionId}.csv`);
+        } else {
+          console.warn('⚠️ No download URL available');
+        }
+      }
+
+      updateDisplay() {
+        if (!this.isActive || !this.startTime) return;
+
+        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        const remaining = Math.max(0, this.exerciseDuration - elapsed);
+        
+        const remainingMinutes = Math.floor(remaining / 60);
+        const remainingSeconds = remaining % 60;
+        
+        // Update remaining time
+        const remainingTimeEl = document.getElementById('remainingTime');
+        if (remainingTimeEl) {
+          remainingTimeEl.textContent = 
+            `${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Update counters
+        document.getElementById('movementCount').textContent = this.movementCount;
+        document.getElementById('correctCount').textContent = this.correctCount;
+        document.getElementById('incorrectCount').textContent = this.incorrectCount;
+        
+        // Update status message
+        if (remaining > 0) {
+          this.statusMessageEl.textContent = 
+            `Exercise in progress - ${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')} remaining`;
+        } else {
+          this.statusMessageEl.textContent = 'Exercise completing...';
+        }
+      }
+
+      async fetchMotionData() {
+        if (!this.isActive) return;
+
+        try {
+          const response = await fetch('/api/sensor-data');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.motionalert) {
+              this.updateMotionDisplay(data.motionalert);
+              this.analyzeMovement(data.motionalert);
+            }
+            
+            // Record this data point
+            await this.recordDataPoint();
+          }
+        } catch (error) {
+          console.error('Error fetching motion data:', error);
+        }
+      }
+
+      async recordDataPoint() {
+        if (!this.isRecording || !this.currentSessionId) return;
+
+        try {
+          const response = await fetch(`/api/sessions/${this.currentSessionId}/record`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (!response.ok) {
+            console.error('❌ Failed to record data point');
+          }
+        } catch (error) {
+          console.error('❌ Recording error:', error);
+        }
+      }
+
+      analyzeMovement(motionAlert) {
+        const normalized = motionAlert.toLowerCase();
+        
+        // Count movements (exclude neutral positions)
+        if (!normalized.includes('neutral') && !normalized.includes('center_0')) {
+          this.movementCount++;
+          
+          // Check if movement contains "BAD MOVEMENT"
+          if (motionAlert.includes('- BAD MOVEMENT')) {
+            this.incorrectCount++;
+          } else if (this.isCorrectMovement(motionAlert)) {
+            this.correctCount++;
+          }
+        }
+      }
+
+      isCorrectMovement(motionAlert) {
+        const normalized = motionAlert.toLowerCase();
+        
+        if (this.exerciseType === 'neck-extension') {
+          // For neck extension, look for up/down movements
+          return normalized.includes('high') || normalized.includes('down');
+        } else if (this.exerciseType === 'head-rotation') {
+          // For head rotation, look for left/right movements
+          return normalized.includes('left') || normalized.includes('right');
+        }
+        
+        return false;
+      }
+
+      formatMotionDescription(motionAlert) {
+        const parts = motionAlert.split('_');
+        if (parts.length >= 2) {
+          const direction = parts[0];
+          const position = parts[1];
+          const level = parts[2] || '';
+
+          let directionText = '';
+          switch (direction) {
+            case 'down': directionText = 'Head down'; break;
+            case 'high': directionText = 'Head up'; break;
+            case 'mid': directionText = 'Mid position'; break;
+            default: directionText = direction;
+          }
+
+          let positionText = '';
+          switch (position) {
+            case 'center': positionText = 'center'; break;
+            case 'left': positionText = 'left'; break;
+            case 'right': positionText = 'right'; break;
+            default: positionText = position;
+          }
+
+          const levelText = level ? ' (' + level + ')' : '';
+          return `${directionText} ${positionText}${levelText}`;
+        }
+        
+        return motionAlert;
+      }
+
+      updateMotionDisplay(motionAlert) {
+        // Clear existing classes
+        this.motionVisualEl.className = 'motion-visual-large';
+
+        let fallbackIcon = '⚪';
+        let description = motionAlert;
+        let imageUrl = null;
+
+        // Extract image name (remove " - BAD MOVEMENT" suffix if present)
+        const imageName = motionAlert.replace(/ - BAD MOVEMENT$/i, '');
+
+        // Look for corresponding image using the clean image name
+        if (this.availableAssets.has(imageName)) {
+          imageUrl = `/assets/${imageName}.png`;
+          description = motionAlert; // Keep the full alert with BAD MOVEMENT
+        } else {
+          // Just use the raw alert
+          fallbackIcon = '❓';
+          description = motionAlert;
+        }
+
+        this.motionDescriptionEl.textContent = description;
+
+        if (imageUrl) {
+          this.motionImageEl.src = imageUrl;
+          this.motionImageEl.style.display = 'block';
+          this.motionFallbackEl.style.display = 'none';
+
+          this.motionImageEl.onerror = () => {
+            this.motionImageEl.style.display = 'none';
+            this.motionFallbackEl.style.display = 'flex';
+            this.motionFallbackEl.textContent = fallbackIcon;
+            this.motionVisualEl.classList.add('no-image');
+          };
+        } else {
+          this.motionImageEl.style.display = 'none';
+          this.motionFallbackEl.style.display = 'flex';
+          this.motionFallbackEl.textContent = fallbackIcon;
+          this.motionVisualEl.classList.add('no-image');
+        }
+      }
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      new ExerciseSession();
+    });
+  </script>
+</body>
+</html>
