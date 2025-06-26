@@ -668,24 +668,11 @@
           // Check if movement contains "BAD MOVEMENT"
           if (motionAlert.includes('- BAD MOVEMENT')) {
             this.incorrectCount++;
-          } else if (this.isCorrectMovement(motionAlert)) {
+          } else {
+            // All movements that are not BAD MOVEMENT are correct
             this.correctCount++;
           }
         }
-      }
-
-      isCorrectMovement(motionAlert) {
-        const normalized = motionAlert.toLowerCase();
-        
-        if (this.exerciseType === 'neck-extension') {
-          // For neck extension, look for up/down movements
-          return normalized.includes('high') || normalized.includes('down');
-        } else if (this.exerciseType === 'head-rotation') {
-          // For head rotation, look for left/right movements
-          return normalized.includes('left') || normalized.includes('right');
-        }
-        
-        return false;
       }
 
       formatMotionDescription(motionAlert) {
