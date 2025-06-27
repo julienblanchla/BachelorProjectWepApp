@@ -353,15 +353,18 @@ h2 {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: calc(100vh - 150px); /* Added max-height constraint */
+  max-height: calc(50vh - 75px); /* Half height for dual charts */
 }
 
-#accelChart {
+.chart-only.mbient-chart {
+  margin-top: 0;
+}
+
+#accelChart, #mbientChart {
   flex: 1;
   min-height: 0;
-  max-height: calc(100vh - 200px); /* Reduced from 220px to 200px */
   width: 100% !important;
-  height: auto !important; /* Added to prevent infinite expansion */
+  height: auto !important;
 }
 
 /* Sensors Only Page Styles */
@@ -852,95 +855,202 @@ h2 {
   display: none !important;
 }
 
-/* Responsive Design */
-@media (max-width: 1400px) {
+/* Main Container Styles - Adjusted for dual charts */
+.main-container {
+  height: calc(100vh - 80px);
+  display: grid;
+  grid-template-columns: 1fr 1fr 180px; 
+  grid-template-rows: 1fr 1fr 90px; /* Added extra row for second chart */
+  gap: 0.2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.chart-container {
+  grid-column: 1;
+  grid-row: 1;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chart-container-mbient {
+  grid-column: 1;
+  grid-row: 2;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.data-list {
+  grid-column: 2;
+  grid-row: 1 / 3; /* Span both chart rows */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.motion-indicator {
+  grid-column: 3;
+  grid-row: 1 / 3; /* Span both chart rows */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.recording-section {
+  grid-column: 1 / 4; /* Span all columns */
+  grid-row: 3;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  padding: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Chart Only Page Styles - Updated for dual charts */
+.chart-only-container {
+  height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.chart-only {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(50vh - 75px); /* Half height for dual charts */
+}
+
+.chart-only.mbient-chart {
+  margin-top: 0;
+}
+
+#accelChart, #mbientChart {
+  flex: 1;
+  min-height: 0;
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
   .main-container {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 50px 1fr 80px; /* Recording at top, main content, motion at bottom */
+    grid-template-rows: 1fr 1fr 1fr 80px;
+  }
+  
+  .chart-container {
+    grid-column: 1 / 3;
+    grid-row: 1;
+  }
+  
+  .chart-container-mbient {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+  
+  .data-list {
+    grid-column: 1;
+    grid-row: 3;
   }
   
   .motion-indicator {
-    grid-column: 1 / -1; /* Spans both columns */
-    grid-row: 3; /* Third row */
-    flex-direction: row;
-    justify-content: space-around;
-    height: 80px;
-    padding: 0.8rem;
+    grid-column: 2;
+    grid-row: 3;
   }
-
-  .motion-visual {
-    width: 100px; /* Reduced for tablet */
-    height: 100px;
-  }
-
+  
   .recording-section {
-    height: 50px;
-    flex-direction: row;
-    gap: 0.4rem;
-    padding: 0.4rem;
+    grid-column: 1 / 3;
+    grid-row: 4;
   }
 }
 
 @media (max-width: 768px) {
   .main-container {
     grid-template-columns: 1fr;
-    grid-template-rows: 50px 1fr auto auto; /* Recording, chart, data, motion */
+    grid-template-rows: auto 1fr 1fr auto auto auto;
     height: calc(100vh - 40px);
   }
-
+  
+  .recording-section {
+    grid-column: 1;
+    grid-row: 1;
+    height: auto;
+    min-height: 60px;
+  }
+  
   .chart-container {
     grid-column: 1;
     grid-row: 2;
   }
-
-  .data-list {
+  
+  .chart-container-mbient {
     grid-column: 1;
     grid-row: 3;
   }
-
-  .motion-indicator {
+  
+  .data-list {
     grid-column: 1;
     grid-row: 4;
-    flex-direction: row;
-    justify-content: center;
+  }
+  
+  .motion-indicator {
+    grid-column: 1;
+    grid-row: 5;
     height: auto;
-    min-height: 60px;
-    padding: 0.5rem;
+    min-height: 100px;
   }
-
-  .motion-visual {
-    width: 80px;
-    height: 80px;
-  }
-
-  .recording-section {
-    height: 50px;
-    flex-direction: row;
+  
+  .chart-only-container {
     gap: 0.3rem;
-    padding: 0.3rem;
   }
-
-  .recording-center {
-    gap: 0.2rem;
-  }
-
-  .btn {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.75rem;
-  }
-
-  .recording-info-item {
-    min-width: 35px;
-    padding: 0.15rem 0.3rem;
-  }
-
-  .recording-info-item strong {
-    font-size: 0.7rem;
-  }
-
-  .recording-right {
-    font-size: 0.65rem;
-    gap: 0.3rem;
+  
+  .chart-only {
+    padding: 1rem;
+    max-height: calc(45vh - 50px);
   }
 }
 

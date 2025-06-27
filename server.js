@@ -16,7 +16,8 @@ const server = createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
-const DATA_URL = 'http://153.109.22.167:8080/nordic-thingy/properties/count/';
+const DATA_URL = 'http://153.109.22.167:8088/multi-sensor/properties/nordicCount';
+const DATA_URL_MBIENT = 'http://153.109.22.167:8088/multi-sensor/properties/mbientCount';
 const POLL_INTERVAL = 1000;
 
 // Create necessary folders if they don't exist
@@ -222,7 +223,7 @@ app.get('/api/assets', (req, res) => {
   }
 });
 
-// Proxy route to bypass CORS
+// Proxy route to bypass CORS for Nordic sensor
 app.get('/api/sensor-data', async (req, res) => {
   try {
     const response = await fetch(DATA_URL);
@@ -240,6 +241,63 @@ app.get('/api/sensor-data', async (req, res) => {
     
     res.json(data);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// New proxy route for Mbient sensor
+app.get('/api/sensor-data-mbient', async (req, res) => {
+  try {
+    const response = await fetch(DATA_URL_MBIENT);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    let data = await response.json();
+    
+    // If data is a JSON string, parse it again
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
+    }
+    
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Combined sensor data endpoint
+app.get('/api/sensor-data-combined', async (req, res) => {
+  try {
+    const [nordicResponse, mbientResponse] = await Promise.all([
+      fetch(DATA_URL),
+      fetch(DATA_URL_MBIENT)
+    ]);
+    
+    let nordicData = null;
+    let mbientData = null;
+    
+    if (nordicResponse.ok) {
+      nordicData = await nordicResponse.json();
+      if (typeof nordicData === 'string') {
+        nordicData = JSON.parse(nordicData);
+      }
+    }
+    
+    if (mbientResponse.ok) {
+      mbientData = await mbientResponse.json();
+      if (typeof mbientData === 'string') {
+        mbientData = JSON.parse(mbientData);
+      }
+    }
+    
+    res.json({
+      nordic: nordicData,
+      mbient: mbientData
+    });
+  } catch (error) {
+    console.error('Combined sensor data error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -398,19 +456,30 @@ app.get('/api/sessions', (req, res) => {
 
 // WebSocket connection handling
 io.on('connection', (socket) => {
-  // Data polling
+  // Data polling for both sensors
   const timer = setInterval(async () => {
     try {
-      const response = await fetch(DATA_URL);
+      const [nordicResponse, mbientResponse] = await Promise.all([
+        fetch(DATA_URL),
+        fetch(DATA_URL_MBIENT)
+      ]);
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      let nordicData = null;
+      let mbientData = null;
+      
+      if (nordicResponse.ok) {
+        nordicData = await nordicResponse.json();
       }
       
-      const data = await response.json();
+      if (mbientResponse.ok) {
+        mbientData = await mbientResponse.json();
+      }
       
-      // Send data to client
-      socket.emit('sensorData', data);
+      // Send combined data to client
+      socket.emit('sensorData', {
+        nordic: nordicData,
+        mbient: mbientData
+      });
       
     } catch (error) {
       // Silent error handling
