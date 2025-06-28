@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>Exercise Session - Nordic Thingy</title>
   <link rel="stylesheet" href="/style/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .exercise-session-container {
       height: calc(100vh - 100px);
@@ -253,12 +256,23 @@
   <h1>🏃‍♂️ Exercise Session - Nordic Thingy</h1>
   
   <div class="exercise-session-container">
+    <!-- Navigation Menu -->
     <div class="navigation">
-      <a href="/" class="nav-btn">🏠 Dashboard</a>
-      <a href="/chart" class="nav-btn">📈 Chart</a>
-      <a href="/sensors" class="nav-btn">🌡️ Sensors</a>
-      <a href="/motion" class="nav-btn">🏃 Motion</a>
-      <a href="/patients" class="nav-btn">👥 Patients</a>
+      <a href="/" class="nav-btn">
+        🏠 Dashboard
+      </a>
+      <a href="/chart" class="nav-btn">
+        📈 Charts
+      </a>
+      <a href="/sensors" class="nav-btn">
+        🌡️ Sensors
+      </a>
+      <a href="/motion" class="nav-btn">
+        🏃 Motion
+      </a>
+      <a href="/patients" class="nav-btn">
+        👥 Patients
+      </a>
     </div>
 
     <div class="exercise-header">
@@ -411,21 +425,37 @@
         const exercises = {
           'neck-extension': {
             name: 'Neck Extension',
-            icon: '🔵'
+            icon: '/assets/NeckExtension.png',
+            fallback: '🔵'
           },
           'head-rotation': {
-            name: 'Head Rotation',
-            icon: '🟢'
+            name: 'Head Rotation', 
+            icon: '/assets/HeadRotation.png',
+            fallback: '🟢'
           }
         };
 
         const exercise = exercises[this.exerciseType];
         if (exercise) {
           this.exerciseNameEl.textContent = exercise.name;
-          this.exerciseIconEl.textContent = exercise.icon;
+          
+          // Remplacer l'icône par l'image
+          if (exercise.icon) {
+            this.exerciseIconEl.innerHTML = `
+              <img src="${exercise.icon}" alt="${exercise.name}" 
+                   style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                   onerror="this.style.display='none'; this.parentElement.innerHTML='${exercise.fallback}'; this.parentElement.style.fontSize='4rem';">
+            `;
+          } else {
+            this.exerciseIconEl.textContent = exercise.fallback;
+          }
         } else {
           this.exerciseNameEl.textContent = 'Unknown Exercise';
-          this.exerciseIconEl.textContent = '❓';
+          this.exerciseIconEl.innerHTML = `
+            <img src="/assets/${this.exerciseType}.png" alt="Exercise" 
+                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                 onerror="this.style.display='none'; this.parentElement.innerHTML='❓'; this.parentElement.style.fontSize='4rem';">
+          `;
         }
       }
 

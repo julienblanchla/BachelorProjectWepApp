@@ -4,18 +4,32 @@
   <meta charset="UTF-8">
   <title>Accelerometer Chart - Nordic Thingy</title>
   <link rel="stylesheet" href="/style/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>📈 Accelerometer Charts - Nordic Thingy & Mbient</h1>
+  <h1>📈 Accelerometer Chart - Nordic Thingy</h1>
   
   <div class="chart-only-container">
+    <!-- Navigation Menu -->
     <div class="navigation">
-      <a href="/" class="nav-btn">🏠 Dashboard</a>
-      <a href="/chart" class="nav-btn active">📈 Chart</a>
-      <a href="/sensors" class="nav-btn">🌡️ Sensors</a>
-      <a href="/motion" class="nav-btn">🏃 Motion</a>
-      <a href="/patients" class="nav-btn">👥 Patients</a>
+      <a href="/" class="nav-btn">
+        🏠 Dashboard
+      </a>
+      <a href="/chart" class="nav-btn active">
+        📈 Charts
+      </a>
+      <a href="/sensors" class="nav-btn">
+        🌡️ Sensors
+      </a>
+      <a href="/motion" class="nav-btn">
+        🏃 Motion
+      </a>
+      <a href="/patients" class="nav-btn">
+        👥 Patients
+      </a>
     </div>
 
     <div class="chart-only">
@@ -26,7 +40,7 @@
       <canvas id="mbientChart"></canvas>
     </div>
 
-    <div class="status" id="status">Connecting...</div>
+    <!-- STATUS SUPPRIMÉ -->
   </div>
 
   <script>
@@ -36,7 +50,7 @@
         this.intervalMs = intervalMs;
         this.maxPoints = 100;
         this.timer = null;
-        this.statusEl = document.getElementById('status');
+        // statusEl supprimé
         this.errorCount = 0;
         this.successCount = 0;
         
@@ -216,7 +230,7 @@
           
         } catch (error) {
           this.errorCount++;
-          this.updateStatus(`❌ Error: ${error.message}`, 'error');
+          // updateStatus supprimé - pas d'affichage d'erreur
           return null;
         }
       }
@@ -259,16 +273,11 @@
         }
       }
 
-      updateStatus(message, type = '') {
-        this.statusEl.textContent = message;
-        this.statusEl.className = `status ${type}`;
-      }
-
       async refresh() {
         const data = await this.fetchData();
         if (data) {
           this.updateCharts(data);
-          this.updateStatus(`✅ Connected (${this.successCount} updates)`, 'success');
+          // updateStatus supprimé - pas d'affichage de connexion
         }
       }
 

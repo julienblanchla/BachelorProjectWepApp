@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Nordic Thingy Dashboard - Sensors</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nordic Thingy Dashboard - Professional Sensor Monitoring</title>
   <link rel="stylesheet" href="/style/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>🔬 Nordic Thingy Dashboard - Real-Time Sensors</h1>
+  <h1>🔬 Nordic Thingy Dashboard - Professional Sensor Monitoring</h1>
   
   <!-- Navigation Menu -->
   <div class="navigation">
@@ -15,7 +19,7 @@
       🏠 Dashboard
     </a>
     <a href="/chart" class="nav-btn">
-      📈 Chart
+      📈 Charts
     </a>
     <a href="/sensors" class="nav-btn">
       🌡️ Sensors
@@ -29,24 +33,56 @@
   </div>
   
   <div class="main-container">
-    <!-- Recording section moved to top -->
+    <!-- Nordic Thingy Chart -->
+    <div class="chart-container">
+      <h2>📈 Nordic Thingy Accelerometer</h2>
+      <canvas id="accelChart"></canvas>
+    </div>
+    
+    <!-- Mbient Chart -->
+    <div class="chart-container-mbient">
+      <h2>📊 Mbient Accelerometer</h2>
+      <canvas id="mbientChart"></canvas>
+    </div>
+    
+    <!-- Sensor Data Cards -->
+    <div class="data-list">
+      <h2>📊 Live Sensor Data</h2>
+      <div class="sensor-grid" id="sensorGrid">
+        <!-- Cards will be added dynamically -->
+      </div>
+    </div>
+
+    <!-- Motion Indicator -->
+    <div class="motion-indicator">
+      <div class="motion-title">🏃 Motion Detection</div>
+      <div id="motionVisual" class="motion-visual neutral">
+        <img id="motionImage" src="" alt="Motion Avatar" style="display: none;">
+        <span id="motionFallback">⚪</span>
+      </div>
+      <div id="motionDescription" class="motion-description neutral">
+        Initializing...
+      </div>
+    </div>
+
+    <!-- Recording Controls -->
     <div class="recording-section">
       <div class="recording-left">
-        <h2>📹 Recording</h2>
+        <h2>📹 Data Recording</h2>
         <div class="recording-status idle" id="recordingStatus">
-          🔴 Ready
+          🔴 Ready to Record
         </div>
       </div>
       
       <div class="recording-center">
         <button class="btn btn-start" id="startBtn">
-          ▶️ Start
+          ▶️ Start Recording
         </button>
         <button class="btn btn-stop" id="stopBtn" disabled>
-          ⏹️ Stop
+          ⏹️ Stop Recording
         </button>
         <button class="btn btn-download" id="downloadBtn" disabled>
-          💾 CSV
+          💾 Download CSV
         </button>
       </div>
 
@@ -57,636 +93,622 @@
         </div>
         <div class="recording-info-item">
           <strong id="recordingCount">0</strong>
-          <span>Points</span>
+          <span>Data Points</span>
         </div>
-      </div>
-    </div>
-
-    <!-- Main content grid -->
-    <div class="chart-container">
-      <h2>📈 Nordic Thingy Accelerometer</h2>
-      <canvas id="accelChart"></canvas>
-    </div>
-    
-    <!-- New Mbient chart container -->
-    <div class="chart-container-mbient">
-      <h2>📊 Mbient Accelerometer</h2>
-      <canvas id="mbientChart"></canvas>
-    </div>
-    
-    <div class="data-list">
-      <h2>📊 Sensor Data</h2>
-      <div class="sensor-grid" id="sensorGrid">
-        <!-- Cards will be added dynamically -->
-      </div>
-    </div>
-
-    <div class="motion-indicator">
-      <div class="motion-title">🏃 Motion</div>
-      <div id="motionVisual" class="motion-visual neutral">
-        <img id="motionImage" src="" alt="Avatar" style="display: none;">
-        <span id="motionFallback">⚪</span>
-      </div>
-      <div id="motionDescription" class="motion-description neutral">
-        Waiting...
       </div>
     </div>
   </div>
 
   <script>
-class SensorDashboard {
-    constructor(apiUrl, intervalMs = 1000) {
-      this.apiUrl = apiUrl;
-      this.intervalMs = intervalMs;
-      this.maxPoints = 50;
-      this.timer = null;
-      this.statusEl = document.getElementById('status');
-      this.sensorGridEl = document.getElementById('sensorGrid');
-      this.motionVisualEl = document.getElementById('motionVisual');
-      this.motionDescriptionEl = document.getElementById('motionDescription');
-      this.motionImageEl = document.getElementById('motionImage');
-      this.motionFallbackEl = document.getElementById('motionFallback');
-      this.errorCount = 0;
-      this.successCount = 0;
-      
-      // Recording variables
-      this.isRecording = false;
-      this.currentSessionId = null;
-      this.recordingStartTime = null;
-      this.recordingTimer = null;
-      this.recordingCount = 0;
-      this.downloadUrl = null;
-      
-      // Load available assets
-      this.availableAssets = new Set();
-      this.loadAvailableAssets();
-      
-      this.initCharts();
-      this.initSensorCards();
-      this.initRecordingControls();
-    }
-
-    async loadAvailableAssets() {
-      try {
-        const response = await fetch('/api/assets');
-        if (response.ok) {
-          const assets = await response.json();
-          assets.forEach(asset => {
-            this.availableAssets.add(asset.name);
-          });
-          console.log('✅ Assets loaded:', Array.from(this.availableAssets));
+    class SensorDashboard {
+        constructor(apiUrl, intervalMs = 1000) {
+          this.apiUrl = apiUrl;
+          this.intervalMs = intervalMs;
+          this.maxPoints = 50;
+          this.timer = null;
+          this.statusEl = document.getElementById('status');
+          this.sensorGridEl = document.getElementById('sensorGrid');
+          this.motionVisualEl = document.getElementById('motionVisual');
+          this.motionDescriptionEl = document.getElementById('motionDescription');
+          this.motionImageEl = document.getElementById('motionImage');
+          this.motionFallbackEl = document.getElementById('motionFallback');
+          this.errorCount = 0;
+          this.successCount = 0;
+          
+          // Recording variables
+          this.isRecording = false;
+          this.currentSessionId = null;
+          this.recordingStartTime = null;
+          this.recordingTimer = null;
+          this.recordingCount = 0;
+          this.downloadUrl = null;
+          
+          // Load available assets
+          this.availableAssets = new Set();
+          this.loadAvailableAssets();
+          
+          this.initCharts();
+          this.initSensorCards();
+          this.initRecordingControls();
         }
-      } catch (error) {
-        console.warn('⚠️ Could not load assets:', error);
-      }
-    }
 
-    initRecordingControls() {
-      const startBtn = document.getElementById('startBtn');
-      const stopBtn = document.getElementById('stopBtn');
-      const downloadBtn = document.getElementById('downloadBtn');
-      const recordingInfo = document.getElementById('recordingInfo');
-      const recordingStatus = document.getElementById('recordingStatus');
-
-      startBtn.addEventListener('click', async () => {
-        try {
-          const response = await fetch('/api/sessions/start', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            this.currentSessionId = data.sessionId;
-            this.isRecording = true;
-            this.recordingStartTime = Date.now();
-            this.recordingCount = 0;
-
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
-            downloadBtn.disabled = true;
-            recordingInfo.style.display = 'flex';
-            recordingStatus.textContent = '🔴 Recording';
-            recordingStatus.className = 'recording-status recording';
-
-            this.recordingTimer = setInterval(() => {
-              this.updateRecordingInfo();
-            }, 1000);
+        async loadAvailableAssets() {
+          try {
+            const response = await fetch('/api/assets');
+            if (response.ok) {
+              const assets = await response.json();
+              assets.forEach(asset => {
+                this.availableAssets.add(asset.name);
+              });
+              console.log('✅ Assets loaded:', Array.from(this.availableAssets));
+            }
+          } catch (error) {
+            console.warn('⚠️ Could not load assets:', error);
           }
-        } catch (error) {
-          console.error('❌ Start recording error:', error);
         }
-      });
 
-      stopBtn.addEventListener('click', async () => {
-        try {
-          if (this.currentSessionId) {
-            const response = await fetch(`/api/sessions/${this.currentSessionId}/stop`, {
+        initRecordingControls() {
+          const startBtn = document.getElementById('startBtn');
+          const stopBtn = document.getElementById('stopBtn');
+          const downloadBtn = document.getElementById('downloadBtn');
+          const recordingInfo = document.getElementById('recordingInfo');
+          const recordingStatus = document.getElementById('recordingStatus');
+
+          startBtn.addEventListener('click', async () => {
+            try {
+              const response = await fetch('/api/sessions/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                this.currentSessionId = data.sessionId;
+                this.isRecording = true;
+                this.recordingStartTime = Date.now();
+                this.recordingCount = 0;
+
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                downloadBtn.disabled = true;
+                recordingInfo.style.display = 'flex';
+                recordingStatus.textContent = '🔴 Recording Active';
+                recordingStatus.className = 'recording-status recording';
+
+                this.recordingTimer = setInterval(() => {
+                  this.updateRecordingInfo();
+                }, 1000);
+              }
+            } catch (error) {
+              console.error('❌ Start recording error:', error);
+            }
+          });
+
+          stopBtn.addEventListener('click', async () => {
+            try {
+              if (this.currentSessionId) {
+                const response = await fetch(`/api/sessions/${this.currentSessionId}/stop`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  this.downloadUrl = data.downloadUrl;
+                  this.isRecording = false;
+
+                  startBtn.disabled = false;
+                  stopBtn.disabled = true;
+                  downloadBtn.disabled = false;
+                  recordingStatus.textContent = '✅ Recording Complete';
+                  recordingStatus.className = 'recording-status complete';
+
+                  if (this.recordingTimer) {
+                    clearInterval(this.recordingTimer);
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('❌ Stop recording error:', error);
+            }
+          });
+
+          downloadBtn.addEventListener('click', () => {
+            if (this.downloadUrl) {
+              window.open(this.downloadUrl, '_blank');
+            }
+          });
+        }
+
+        updateRecordingInfo() {
+          if (!this.recordingStartTime) return;
+
+          const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1000);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          
+          document.getElementById('recordingDuration').textContent = 
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          document.getElementById('recordingCount').textContent = this.recordingCount;
+        }
+
+        async recordDataPoint() {
+          if (!this.isRecording || !this.currentSessionId) return;
+
+          try {
+            const response = await fetch(`/api/sessions/${this.currentSessionId}/record`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' }
             });
 
             if (response.ok) {
-              const data = await response.json();
-              this.downloadUrl = data.downloadUrl;
-              this.isRecording = false;
+              this.recordingCount++;
+            }
+          } catch (error) {
+            // Silent error handling
+          }
+        }
 
-              startBtn.disabled = false;
-              stopBtn.disabled = true;
-              downloadBtn.disabled = false;
-              recordingStatus.textContent = '✅ Complete';
-              recordingStatus.className = 'recording-status complete';
-
-              if (this.recordingTimer) {
-                clearInterval(this.recordingTimer);
+        initCharts() {
+          // Nordic Thingy Chart with professional styling
+          const nordicCtx = document.getElementById('accelChart').getContext('2d');
+          this.nordicChart = new Chart(nordicCtx, {
+            type: 'line',
+            data: {
+              labels: Array(this.maxPoints).fill(''),
+              datasets: [
+                {
+                  label: 'X-axis',
+                  data: Array(this.maxPoints).fill(0),
+                  borderColor: '#ef4444',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  borderWidth: 2.5,
+                  tension: 0.4,
+                  fill: false,
+                  pointRadius: 0,
+                  pointHoverRadius: 4
+                },
+                {
+                  label: 'Y-axis',
+                  data: Array(this.maxPoints).fill(0),
+                  borderColor: '#3b82f6',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  borderWidth: 2.5,
+                  tension: 0.4,
+                  fill: false,
+                  pointRadius: 0,
+                  pointHoverRadius: 4
+                },
+                {
+                  label: 'Z-axis',
+                  data: Array(this.maxPoints).fill(0),
+                  borderColor: '#10b981',
+                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  borderWidth: 2.5,
+                  tension: 0.4,
+                  fill: false,
+                  pointRadius: 0,
+                  pointHoverRadius: 4
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              interaction: {
+                intersect: false,
+                mode: 'index'
+              },
+              scales: {
+                x: { 
+                  display: false,
+                  grid: { display: false }
+                },
+                y: {
+                  title: { 
+                    display: true, 
+                    text: 'Acceleration (g)', 
+                    font: { size: 12, family: 'Inter', weight: '500' },
+                    color: '#374151'
+                  },
+                  suggestedMin: -2,
+                  suggestedMax: 2,
+                  grid: { 
+                    color: 'rgba(203, 213, 225, 0.3)',
+                    borderDash: [5, 5]
+                  },
+                  ticks: { 
+                    font: { size: 11, family: 'Inter' },
+                    color: '#64748b'
+                  }
+                }
+              },
+              plugins: {
+                legend: { 
+                  position: 'top',
+                  labels: { 
+                    boxWidth: 12, 
+                    padding: 20, 
+                    font: { size: 12, family: 'Inter', weight: '500' },
+                    color: '#374151'
+                  }
+                },
+                title: { 
+                  display: false
+                }
               }
             }
-          }
-        } catch (error) {
-          console.error('❌ Stop recording error:', error);
+          });
+
+          // Mbient Chart with professional styling
+          const mbientCtx = document.getElementById('mbientChart').getContext('2d');
+          this.mbientChart = new Chart(mbientCtx, {
+            type: 'line',
+            data: {
+              labels: Array(this.maxPoints).fill(''),
+              datasets: [
+                {
+                  label: 'X-axis',
+                  data: Array(this.maxPoints).fill(0),
+                  borderColor: '#f59e0b',
+                  backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                  borderWidth: 2.5,
+                  tension: 0.4,
+                  fill: false,
+                  pointRadius: 0,
+                  pointHoverRadius: 4
+                },
+                {
+                  label: 'Y-axis',
+                  data: Array(this.maxPoints).fill(0),
+                  borderColor: '#8b5cf6',
+                  backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                  borderWidth: 2.5,
+                  tension: 0.4,
+                  fill: false,
+                  pointRadius: 0,
+                  pointHoverRadius: 4
+                },
+                {
+                  label: 'Z-axis',
+                  data: Array(this.maxPoints).fill(0),
+                  borderColor: '#06b6d4',
+                  backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                  borderWidth: 2.5,
+                  tension: 0.4,
+                  fill: false,
+                  pointRadius: 0,
+                  pointHoverRadius: 4
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              interaction: {
+                intersect: false,
+                mode: 'index'
+              },
+              scales: {
+                x: { 
+                  display: false,
+                  grid: { display: false }
+                },
+                y: {
+                  title: { 
+                    display: true, 
+                    text: 'Acceleration (g)', 
+                    font: { size: 12, family: 'Inter', weight: '500' },
+                    color: '#374151'
+                  },
+                  suggestedMin: -2,
+                  suggestedMax: 2,
+                  grid: { 
+                    color: 'rgba(203, 213, 225, 0.3)',
+                    borderDash: [5, 5]
+                  },
+                  ticks: { 
+                    font: { size: 11, family: 'Inter' },
+                    color: '#64748b'
+                  }
+                }
+              },
+              plugins: {
+                legend: { 
+                  position: 'top',
+                  labels: { 
+                    boxWidth: 12, 
+                    padding: 20, 
+                    font: { size: 12, family: 'Inter', weight: '500' },
+                    color: '#374151'
+                  }
+                },
+                title: { 
+                  display: false
+                }
+              }
+            }
+          });
         }
+
+        initSensorCards() {
+          this.sensorGridEl.innerHTML = `
+            <div class="sensor-card accelerometer">
+              <div class="sensor-title">🏃 Accelerometer</div>
+              <div class="sensor-value" id="accel-x">X: --</div>
+              <div class="sensor-value" id="accel-y">Y: --</div>
+              <div class="sensor-value" id="accel-z">Z: --</div>
+            </div>
+            
+            <div class="sensor-card temperature">
+              <div class="sensor-title">🌡️ Temperature</div>
+              <div class="sensor-value" id="temperature">-- °C</div>
+              <div class="alert-message" id="temp-alert"></div>
+            </div>
+            
+            <div class="sensor-card humidity">
+              <div class="sensor-title">💧 Humidity</div>
+              <div class="sensor-value" id="humidity">-- %</div>
+              <div class="alert-message" id="humidity-alert"></div>
+            </div>
+            
+            <div class="sensor-card air-quality">
+              <div class="sensor-title">🌬️ Air Quality</div>
+              <div class="sensor-value" id="co2">CO₂: --</div>
+              <div class="sensor-value" id="tvoc">TVOC: --</div>
+              <div class="alert-message" id="air-alert"></div>
+            </div>
+            
+            <div class="sensor-card alerts">
+              <div class="sensor-title">⚠️ System Alerts</div>
+              <div class="alert-message" id="motion-alert"></div>
+              <div class="sensor-timestamp" id="timestamp">Last Update: --</div>
+            </div>
+          `;
+        }
+
+        async fetchData() {
+          try {
+            const response = await fetch('/api/sensor-data-combined', {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+              }
+            });
+            
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            let data = await response.json();
+            
+            if (typeof data === 'string') {
+              data = JSON.parse(data);
+            }
+            
+            if (!data || typeof data !== 'object') {
+              throw new Error('Invalid data format received');
+            }
+            
+            this.successCount++;
+            this.errorCount = 0;
+            
+            return data;
+            
+          } catch (error) {
+            this.errorCount++;
+            console.error('Fetch error:', error);
+            this.updateStatus(`❌ Connection Error: ${error.message}`, 'error');
+            return null;
+          }
+        }
+
+        updateCharts(data) {
+          if (!data) return;
+          
+          // Update Nordic chart
+          if (data.nordic && data.nordic.accelerometer) {
+            const { x, y, z } = data.nordic.accelerometer;
+            
+            this.nordicChart.data.datasets[0].data.push(x);
+            this.nordicChart.data.datasets[1].data.push(y);
+            this.nordicChart.data.datasets[2].data.push(z);
+            
+            this.nordicChart.data.datasets.forEach(dataset => {
+              if (dataset.data.length > this.maxPoints) {
+                dataset.data.shift();
+              }
+            });
+            
+            this.nordicChart.update('none');
+          }
+          
+          // Update Mbient chart
+          if (data.mbient && data.mbient.accelerometer) {
+            const { x, y, z } = data.mbient.accelerometer;
+            
+            this.mbientChart.data.datasets[0].data.push(x);
+            this.mbientChart.data.datasets[1].data.push(y);
+            this.mbientChart.data.datasets[2].data.push(z);
+            
+            this.mbientChart.data.datasets.forEach(dataset => {
+              if (dataset.data.length > this.maxPoints) {
+                dataset.data.shift();
+              }
+            });
+            
+            this.mbientChart.update('none');
+          }
+        }
+
+        updateSensorCards(data) {
+          if (!data) return;
+          
+          // Use Nordic data for sensor cards
+          const nordicData = data.nordic || data;
+          
+          if (nordicData.accelerometer) {
+            document.getElementById('accel-x').textContent = `X: ${nordicData.accelerometer.x.toFixed(3)}`;
+            document.getElementById('accel-y').textContent = `Y: ${nordicData.accelerometer.y.toFixed(3)}`;
+            document.getElementById('accel-z').textContent = `Z: ${nordicData.accelerometer.z.toFixed(3)}`;
+          }
+
+          if (nordicData.temperature !== undefined) {
+            document.getElementById('temperature').textContent = `${nordicData.temperature.toFixed(1)} °C`;
+            const tempAlert = document.getElementById('temp-alert');
+            if (tempAlert) {
+              tempAlert.textContent = nordicData.temperaturealert || '';
+              tempAlert.className = this.getAlertClass(nordicData.temperaturealert);
+            }
+          }
+
+          if (nordicData.humidity !== undefined) {
+            document.getElementById('humidity').textContent = `${nordicData.humidity} %`;
+            const humAlert = document.getElementById('humidity-alert');
+            if (humAlert) {
+              humAlert.textContent = nordicData.humidityalert || '';
+              humAlert.className = this.getAlertClass(nordicData.humidityalert);
+            }
+          }
+
+          if (nordicData.air_quality) {
+            document.getElementById('co2').textContent = `CO₂: ${nordicData.air_quality.CO2}`;
+            document.getElementById('tvoc').textContent = `TVOC: ${nordicData.air_quality.TVOC}`;
+            const airAlert = document.getElementById('air-alert');
+            if (airAlert) {
+              airAlert.textContent = nordicData.air_qualityalert || '';
+              airAlert.className = this.getAlertClass(nordicData.air_qualityalert);
+            }
+          }
+
+          const motionAlert = document.getElementById('motion-alert');
+          if (motionAlert) {
+            motionAlert.textContent = nordicData.motionalert || '';
+            motionAlert.className = this.getAlertClass(nordicData.motionalert);
+          }
+          
+          this.updateMotionIndicator(nordicData.motionalert);
+
+          if (nordicData.timestamp) {
+            const timestampEl = document.getElementById('timestamp');
+            if (timestampEl) {
+              timestampEl.textContent = `Last Update: ${new Date().toLocaleTimeString()}`;
+            }
+          }
+        }
+
+        getAlertClass(alertText) {
+          if (!alertText) return 'alert-message';
+          
+          const text = alertText.toLowerCase();
+          if (text.includes('no alert') || text.includes('good') || text.includes('normal')) {
+            return 'alert-message good';
+          } else if (text.includes('poor') || text.includes('bad') || text.includes('high') || text.includes('critical')) {
+            return 'alert-message danger';
+          } else {
+            return 'alert-message warning';
+          }
+        }
+
+        updateMotionIndicator(motionAlert) {
+          if (!motionAlert) return;
+
+          // Clear existing classes
+          this.motionVisualEl.className = 'motion-visual';
+          this.motionDescriptionEl.className = 'motion-description';
+
+          let fallbackIcon = '⚪';
+          let description = motionAlert;
+          let imageUrl = null;
+
+          // Parse motion alert and find matching asset
+          const alertLower = motionAlert.toLowerCase();
+          
+          // Check available assets for a match
+          for (const assetName of this.availableAssets) {
+            if (alertLower.includes(assetName.toLowerCase())) {
+              imageUrl = `/assets/${assetName}.png`;
+              break;
+            }
+          }
+
+          // Update visual indicator
+          if (imageUrl) {
+            this.motionImageEl.src = imageUrl;
+            this.motionImageEl.style.display = 'block';
+            this.motionFallbackEl.style.display = 'none';
+          } else {
+            this.motionImageEl.style.display = 'none';
+            this.motionFallbackEl.style.display = 'block';
+            this.motionFallbackEl.textContent = fallbackIcon;
+          }
+
+          // Set description
+          this.motionDescriptionEl.textContent = description;
+
+          // Add status classes based on alert content
+          if (alertLower.includes('no alert') || alertLower.includes('neutral')) {
+            this.motionVisualEl.classList.add('neutral');
+            this.motionDescriptionEl.classList.add('neutral');
+          } else if (alertLower.includes('bad') || alertLower.includes('error')) {
+            this.motionVisualEl.classList.add('alert');
+            this.motionDescriptionEl.classList.add('alert');
+          } else {
+            this.motionVisualEl.classList.add('active');
+            this.motionDescriptionEl.classList.add('active');
+          }
+        }
+
+        updateStatus(message, type = '') {
+          if (this.statusEl) {
+            this.statusEl.textContent = message;
+            this.statusEl.className = `status ${type}`;
+          }
+        }
+
+        async refresh() {
+          const data = await this.fetchData();
+          if (data) {
+            this.updateCharts(data);
+            this.updateSensorCards(data);
+            
+            if (this.isRecording) {
+              await this.recordDataPoint();
+            }
+          }
+        }
+
+        start() {
+          this.refresh();
+          this.timer = setInterval(() => this.refresh(), this.intervalMs);
+        }
+
+        stop() {
+          if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+          }
+          
+          if (this.recordingTimer) {
+            clearInterval(this.recordingTimer);
+          }
+        }
+      }
+
+      // Automatic startup
+      document.addEventListener('DOMContentLoaded', () => {
+        window.dashboard = new SensorDashboard('/api/sensor-data', 1000);
+        window.dashboard.start();
       });
 
-      downloadBtn.addEventListener('click', () => {
-        if (this.downloadUrl) {
-          window.open(this.downloadUrl, '_blank');
+      window.addEventListener('beforeunload', () => {
+        if (window.dashboard) {
+          window.dashboard.stop();
         }
       });
-    }
-
-    updateRecordingInfo() {
-      if (!this.recordingStartTime) return;
-
-      const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1000);
-      const minutes = Math.floor(elapsed / 60);
-      const seconds = elapsed % 60;
-      
-      document.getElementById('recordingDuration').textContent = 
-        `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      document.getElementById('recordingCount').textContent = this.recordingCount;
-    }
-
-    async recordDataPoint() {
-      if (!this.isRecording || !this.currentSessionId) return;
-
-      try {
-        const response = await fetch(`/api/sessions/${this.currentSessionId}/record`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (response.ok) {
-          this.recordingCount++;
-        }
-      } catch (error) {
-        // Silent error handling
-      }
-    }
-
-    initCharts() {
-      // Nordic Thingy Chart
-      const nordicCtx = document.getElementById('accelChart').getContext('2d');
-      this.nordicChart = new Chart(nordicCtx, {
-        type: 'line',
-        data: {
-          labels: Array(this.maxPoints).fill(''),
-          datasets: [
-            {
-              label: 'X',
-              data: Array(this.maxPoints).fill(0),
-              borderColor: '#ff6384',
-              backgroundColor: 'rgba(255, 99, 132, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: false,
-              pointRadius: 0
-            },
-            {
-              label: 'Y',
-              data: Array(this.maxPoints).fill(0),
-              borderColor: '#36a2eb',
-              backgroundColor: 'rgba(54, 162, 235, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: false,
-              pointRadius: 0
-            },
-            {
-              label: 'Z',
-              data: Array(this.maxPoints).fill(0),
-              borderColor: '#4bc0c0',
-              backgroundColor: 'rgba(75, 192, 192, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: false,
-              pointRadius: 0
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          interaction: {
-            intersect: false,
-          },
-          scales: {
-            x: { display: false },
-            y: {
-              title: { display: true, text: 'Acceleration (g)', font: { size: 11 } },
-              suggestedMin: -2,
-              suggestedMax: 2,
-              grid: { color: 'rgba(0,0,0,0.1)' },
-              ticks: { font: { size: 10 } }
-            }
-          },
-          plugins: {
-            legend: { 
-              position: 'top', 
-              labels: { boxWidth: 10, padding: 15, font: { size: 11 } }
-            },
-            title: { 
-              display: true, 
-              text: 'Nordic Thingy',
-              font: { size: 13, weight: 'normal' }
-            }
-          }
-        }
-      });
-
-      // Mbient Chart
-      const mbientCtx = document.getElementById('mbientChart').getContext('2d');
-      this.mbientChart = new Chart(mbientCtx, {
-        type: 'line',
-        data: {
-          labels: Array(this.maxPoints).fill(''),
-          datasets: [
-            {
-              label: 'X',
-              data: Array(this.maxPoints).fill(0),
-              borderColor: '#ff9f40',
-              backgroundColor: 'rgba(255, 159, 64, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: false,
-              pointRadius: 0
-            },
-            {
-              label: 'Y',
-              data: Array(this.maxPoints).fill(0),
-              borderColor: '#9966ff',
-              backgroundColor: 'rgba(153, 102, 255, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: false,
-              pointRadius: 0
-            },
-            {
-              label: 'Z',
-              data: Array(this.maxPoints).fill(0),
-              borderColor: '#ffcd56',
-              backgroundColor: 'rgba(255, 205, 86, 0.1)',
-              borderWidth: 2,
-              tension: 0.4,
-              fill: false,
-              pointRadius: 0
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          interaction: {
-            intersect: false,
-          },
-          scales: {
-            x: { display: false },
-            y: {
-              title: { display: true, text: 'Acceleration (g)', font: { size: 11 } },
-              suggestedMin: -2,
-              suggestedMax: 2,
-              grid: { color: 'rgba(0,0,0,0.1)' },
-              ticks: { font: { size: 10 } }
-            }
-          },
-          plugins: {
-            legend: { 
-              position: 'top', 
-              labels: { boxWidth: 10, padding: 15, font: { size: 11 } }
-            },
-            title: { 
-              display: true, 
-              text: 'Mbient',
-              font: { size: 13, weight: 'normal' }
-            }
-          }
-        }
-      });
-    }
-
-    initSensorCards() {
-      this.sensorGridEl.innerHTML = `
-        <div class="sensor-card accelerometer">
-          <div class="sensor-title">🏃 Accelerometer</div>
-          <div class="sensor-value" id="accel-x">X: --</div>
-          <div class="sensor-value" id="accel-y">Y: --</div>
-          <div class="sensor-value" id="accel-z">Z: --</div>
-        </div>
-        
-        <div class="sensor-card temperature">
-          <div class="sensor-title">🌡️ Temperature</div>
-          <div class="sensor-value" id="temperature">-- °C</div>
-          <div class="alert-message" id="temp-alert"></div>
-        </div>
-        
-        <div class="sensor-card humidity">
-          <div class="sensor-title">💧 Humidity</div>
-          <div class="sensor-value" id="humidity">-- %</div>
-          <div class="alert-message" id="humidity-alert"></div>
-        </div>
-        
-        <div class="sensor-card air-quality">
-          <div class="sensor-title">🌬️ Air Quality</div>
-          <div class="sensor-value" id="co2">CO₂: --</div>
-          <div class="sensor-value" id="tvoc">TVOC: --</div>
-          <div class="alert-message" id="air-alert"></div>
-        </div>
-        
-        <div class="sensor-card alerts">
-          <div class="sensor-title">⚠️ Alerts</div>
-          <div class="alert-message" id="motion-alert"></div>
-          <div class="sensor-timestamp" id="timestamp">Last Update: --</div>
-        </div>
-      `;
-    }
-
-    async fetchData() {
-      try {
-        console.log('Fetching data from:', '/api/sensor-data-combined'); // Debug log
-        
-        const response = await fetch('/api/sensor-data-combined', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        let data = await response.json();
-        
-        console.log('Received data:', data); // Debug log
-        
-        if (typeof data === 'string') {
-          data = JSON.parse(data);
-        }
-        
-        if (!data || typeof data !== 'object') {
-          throw new Error('Invalid data format received');
-        }
-        
-        this.successCount++;
-        this.errorCount = 0;
-        
-        return data;
-        
-      } catch (error) {
-        this.errorCount++;
-        console.error('Fetch error:', error); // Debug log
-        this.updateStatus(`❌ Error: ${error.message}`, 'error');
-        return null;
-      }
-    }
-
-    updateCharts(data) {
-      if (!data) {
-        console.warn('No data to update charts'); // Debug log
-        return;
-      }
-      
-      console.log('Updating charts with data:', data); // Debug log
-      
-      // Update Nordic chart
-      if (data.nordic && data.nordic.accelerometer) {
-        const { x, y, z } = data.nordic.accelerometer;
-        
-        this.nordicChart.data.datasets[0].data.push(x);
-        this.nordicChart.data.datasets[1].data.push(y);
-        this.nordicChart.data.datasets[2].data.push(z);
-        
-        this.nordicChart.data.datasets.forEach(dataset => {
-          if (dataset.data.length > this.maxPoints) {
-            dataset.data.shift();
-          }
-        });
-        
-        this.nordicChart.update('none');
-        console.log('Nordic chart updated'); // Debug log
-      } else {
-        console.warn('No Nordic accelerometer data'); // Debug log
-      }
-      
-      // Update Mbient chart
-      if (data.mbient && data.mbient.accelerometer) {
-        const { x, y, z } = data.mbient.accelerometer;
-        
-        this.mbientChart.data.datasets[0].data.push(x);
-        this.mbientChart.data.datasets[1].data.push(y);
-        this.mbientChart.data.datasets[2].data.push(z);
-        
-        this.mbientChart.data.datasets.forEach(dataset => {
-          if (dataset.data.length > this.maxPoints) {
-            dataset.data.shift();
-          }
-        });
-        
-        this.mbientChart.update('none');
-        console.log('Mbient chart updated'); // Debug log
-      } else {
-        console.warn('No Mbient accelerometer data'); // Debug log
-      }
-    }
-
-    updateSensorCards(data) {
-      if (!data) {
-        console.warn('No data to update sensor cards'); // Debug log
-        return;
-      }
-      
-      // Use Nordic data for sensor cards (fallback to direct data structure)
-      const nordicData = data.nordic || data;
-      
-      console.log('Updating sensor cards with Nordic data:', nordicData); // Debug log
-      
-      if (nordicData.accelerometer) {
-        document.getElementById('accel-x').textContent = `X: ${nordicData.accelerometer.x.toFixed(2)}`;
-        document.getElementById('accel-y').textContent = `Y: ${nordicData.accelerometer.y.toFixed(2)}`;
-        document.getElementById('accel-z').textContent = `Z: ${nordicData.accelerometer.z.toFixed(2)}`;
-      }
-
-      if (nordicData.temperature !== undefined) {
-        document.getElementById('temperature').textContent = `${nordicData.temperature.toFixed(1)} °C`;
-        const tempAlert = document.getElementById('temp-alert');
-        if (tempAlert) {
-          tempAlert.textContent = nordicData.temperaturealert || '';
-          tempAlert.className = this.getAlertClass(nordicData.temperaturealert);
-        }
-      }
-
-      if (nordicData.humidity !== undefined) {
-        document.getElementById('humidity').textContent = `${nordicData.humidity} %`;
-        const humAlert = document.getElementById('humidity-alert');
-        if (humAlert) {
-          humAlert.textContent = nordicData.humidityalert || '';
-          humAlert.className = this.getAlertClass(nordicData.humidityalert);
-        }
-      }
-
-      if (nordicData.air_quality) {
-        document.getElementById('co2').textContent = `CO₂: ${nordicData.air_quality.CO2}`;
-        document.getElementById('tvoc').textContent = `TVOC: ${nordicData.air_quality.TVOC}`;
-        const airAlert = document.getElementById('air-alert');
-        if (airAlert) {
-          airAlert.textContent = nordicData.air_qualityalert || '';
-          airAlert.className = this.getAlertClass(nordicData.air_qualityalert);
-        }
-      }
-
-      const motionAlert = document.getElementById('motion-alert');
-      if (motionAlert) {
-        motionAlert.textContent = nordicData.motionalert || '';
-        motionAlert.className = this.getAlertClass(nordicData.motionalert);
-      }
-      
-      this.updateMotionIndicator(nordicData.motionalert);
-
-      if (nordicData.timestamp) {
-        const timestampEl = document.getElementById('timestamp');
-        if (timestampEl) {
-          timestampEl.textContent = `Update: ${new Date().toLocaleTimeString()}`;
-        }
-      }
-    }
-
-    getAlertClass(alertText) {
-      if (!alertText) return 'alert-message';
-      
-      const text = alertText.toLowerCase();
-      if (text.includes('no alert') || text.includes('good')) {
-        return 'alert-message good';
-      } else if (text.includes('poor') || text.includes('bad') || text.includes('high')) {
-        return 'alert-message danger';
-      } else {
-        return 'alert-message warning';
-      }
-    }
-
-    updateMotionIndicator(motionAlert) {
-      if (!motionAlert) return;
-
-      // Clear existing classes
-      this.motionVisualEl.className = 'motion-visual';
-      this.motionDescriptionEl.className = 'motion-description';
-
-      let fallbackIcon = '⚪';
-      let description = motionAlert;
-      let imageUrl = null;
-
-      // Parse motion alert and find matching asset
-      const alertLower = motionAlert.toLowerCase();
-      
-      // Check available assets for a match
-      for (const assetName of this.availableAssets) {
-        if (alertLower.includes(assetName.toLowerCase())) {
-          imageUrl = `/assets/${assetName}.png`;
-          break;
-        }
-      }
-
-      // Update visual indicator
-      if (imageUrl) {
-        this.motionImageEl.src = imageUrl;
-        this.motionImageEl.style.display = 'block';
-        this.motionFallbackEl.style.display = 'none';
-      } else {
-        this.motionImageEl.style.display = 'none';
-        this.motionFallbackEl.style.display = 'block';
-        this.motionFallbackEl.textContent = fallbackIcon;
-      }
-
-      // Set description
-      this.motionDescriptionEl.textContent = description;
-
-      // Add status classes based on alert content
-      if (alertLower.includes('no alert') || alertLower.includes('neutral')) {
-        this.motionVisualEl.classList.add('neutral');
-        this.motionDescriptionEl.classList.add('neutral');
-      } else if (alertLower.includes('bad') || alertLower.includes('error')) {
-        this.motionVisualEl.classList.add('alert');
-        this.motionDescriptionEl.classList.add('alert');
-      } else {
-        this.motionVisualEl.classList.add('active');
-        this.motionDescriptionEl.classList.add('active');
-      }
-    }
-
-    updateStatus(message, type = '') {
-      if (this.statusEl) {
-        this.statusEl.textContent = message;
-        this.statusEl.className = `status ${type}`;
-      }
-    }
-
-    async refresh() {
-      const data = await this.fetchData();
-      if (data) {
-        this.updateCharts(data);
-        this.updateSensorCards(data);
-        
-        if (this.isRecording) {
-          await this.recordDataPoint();
-        }
-        
-        this.updateStatus(`✅ Connected (${this.successCount} updates)`, 'success');
-      }
-    }
-
-    start() {
-      console.log('Starting dashboard...'); // Debug log
-      this.refresh();
-      this.timer = setInterval(() => this.refresh(), this.intervalMs);
-    }
-
-    stop() {
-      if (this.timer) {
-        clearInterval(this.timer);
-        this.timer = null;
-      }
-      
-      if (this.recordingTimer) {
-        clearInterval(this.recordingTimer);
-      }
-    }
-
-    // ...existing code for other methods...
-  }
-
-  // Automatic startup
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing dashboard...'); // Debug log
-    window.dashboard = new SensorDashboard('/api/sensor-data', 1000);
-    window.dashboard.start();
-  });
-
-  window.addEventListener('beforeunload', () => {
-    if (window.dashboard) {
-      window.dashboard.stop();
-    }
-  });
-</script>
+  </script>
 </body>
 </html>

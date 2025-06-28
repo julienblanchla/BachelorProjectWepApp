@@ -1,0 +1,11 @@
+Timestamp,Patient_ID,Patient_Name,Exercise_Type,Accel_X,Accel_Y,Accel_Z,Temperature,Humidity,CO2,TVOC,Temperature_Alert,Humidity_Alert,Air_Quality_Alert,Motion_Alert
+2025-06-28T22:56:11.265Z,Milan_Copain,HeadRotation,-0.0302734375,0.0068359375,-0.994140625,23.77,54,419,2,"down_center_0"
+2025-06-28T22:56:12.188Z,Milan_Copain,HeadRotation,-0.0419921875,0.0068359375,-1.0009765625,23.62,54,419,2,"down_center_0"
+2025-06-28T22:56:13.221Z,Milan_Copain,HeadRotation,-0.046875,0.0107421875,-1.017578125,23.62,55,419,2,"down_center_0"
+2025-06-28T22:56:14.191Z,Milan_Copain,HeadRotation,-0.0390625,0.0078125,-1.013671875,23.69,55,419,2,"down_center_0"
+2025-06-28T22:56:15.237Z,Milan_Copain,HeadRotation,-0.037109375,0.013671875,-1.0107421875,23.69,56,419,2,"down_center_0"
+2025-06-28T22:56:16.203Z,Milan_Copain,HeadRotation,-0.0341796875,0,-0.9990234375,23.39,56,419,2,"down_center_0"
+2025-06-28T22:56:17.226Z,Milan_Copain,HeadRotation,-0.0380859375,0.005859375,-1.0087890625,23.39,58,419,2,"down_center_0"
+2025-06-28T22:56:18.179Z,Milan_Copain,HeadRotation,-0.0400390625,0.00390625,-1.0107421875,22.72,58,419,2,"down_center_0"
+2025-06-28T22:56:19.304Z,Milan_Copain,HeadRotation,-0.025390625,0.005859375,-1.0087890625,22.72,58,419,2,"down_center_0"
+2025-06-28T22:56:20.379Z,Milan_Copain,HeadRotation,-0.0380859375,0.0048828125,-1.0048828125,23.91,58,419,2,"down_center_0"

@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>Motion - Nordic Thingy</title>
   <link rel="stylesheet" href="/style/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .motion-only-container {
       height: calc(100vh - 140px);
@@ -80,40 +83,6 @@
       font-weight: 500;
     }
 
-    .navigation {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      padding: 1rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-    }
-
-    .nav-btn {
-      padding: 0.5rem 1rem;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: 500;
-      transition: transform 0.2s ease;
-      font-size: 0.9rem;
-    }
-
-    .nav-btn:hover {
-      transform: translateY(-2px);
-    }
-
-    .nav-btn.active {
-      background: linear-gradient(135deg, #28a745, #20c997);
-      transform: translateY(-2px);
-    }
-
     .recording-section-large {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
@@ -187,9 +156,52 @@
       font-weight: 700;
     }
 
-    .status {
-      flex-shrink: 0;
-      margin-top: 1rem;
+    /* Nouveau style pour les compteurs de mouvement */
+    .movement-counters {
+      display: flex;
+      gap: 1rem;
+      margin-left: 1rem;
+    }
+
+    .movement-counter-item {
+      text-align: center;
+      background: rgba(248, 249, 250, 0.9);
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      min-width: 70px;
+      border: 2px solid transparent;
+    }
+
+    .movement-counter-item.good {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .movement-counter-item.bad {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .movement-counter-item strong {
+      display: block;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .movement-counter-item.good strong {
+      color: #10b981;
+    }
+
+    .movement-counter-item.bad strong {
+      color: #ef4444;
+    }
+
+    .movement-counter-item span {
+      font-size: 0.8rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     @media (max-width: 768px) {
@@ -220,6 +232,11 @@
       .motion-title-large {
         font-size: 1.3rem;
       }
+
+      .movement-counters {
+        margin-left: 0;
+        justify-content: center;
+      }
     }
   </style>
 </head>
@@ -227,11 +244,12 @@
   <h1>🏃 Head Motion - Nordic Thingy</h1>
   
   <div class="motion-only-container">
+    <!-- Navigation Menu -->
     <div class="navigation">
-      <a href="/" class="nav-btn">🏠 Dashboard</a>
-      <a href="/chart" class="nav-btn">📈 Chart</a>
-      <a href="/sensors" class="nav-btn">🌡️ Sensors</a>
-      <a href="/motion" class="nav-btn active">🏃 Motion</a>
+      <a href="/"         class="nav-btn">🏠 Dashboard</a>
+      <a href="/chart"    class="nav-btn">📈 Charts</a>
+      <a href="/sensors"  class="nav-btn">🌡️ Sensors</a>
+      <a href="/motion"   class="nav-btn active">🏃 Motion</a>
       <a href="/patients" class="nav-btn">👥 Patients</a>
     </div>
 
@@ -275,11 +293,26 @@
           <strong id="recordingCount">0</strong>
           <span>Points</span>
         </div>
+        
+        <!-- Nouveaux compteurs de mouvement -->
+        <div class="movement-counters">
+          <div class="movement-counter-item good">
+            <strong id="goodMovementCount">0</strong>
+            <span>Good</span>
+          </div>
+          <div class="movement-counter-item bad">
+            <strong id="badMovementCount">0</strong>
+            <span>Bad</span>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- STATUS CACHÉ - Code gardé mais invisible -->
+    <div class="status" id="status" style="display: none;">Connecting...</div>
   </div>
 
-  <!-- Debug info -->
+  <!-- DEBUG INFO CACHÉ - Code gardé mais invisible -->
   <div class="debug-info" id="debugInfo" style="display: none;">
     <div>Alert: <span id="debugAlert">-</span></div>
     <div>Image: <span id="debugImage">-</span></div>
@@ -291,6 +324,7 @@
         this.apiUrl = apiUrl;
         this.intervalMs = intervalMs;
         this.timer = null;
+        // Code gardé - variables de status et debug
         this.statusEl = document.getElementById('status');
         this.motionVisualEl = document.getElementById('motionVisual');
         this.motionDescriptionEl = document.getElementById('motionDescription');
@@ -310,296 +344,186 @@
         this.recordingCount = 0;
         this.downloadUrl = null;
         
+        // Movement counters - NOUVEAU
+        this.goodMovementCount = 0;
+        this.badMovementCount = 0;
+        
         // Load available assets
         this.availableAssets = new Set();
         this.loadAvailableAssets();
         
         this.initRecordingControls();
         
-        // Enable debug in development mode
+        // Code gardé - debug mode (mais toujours caché)
         this.debugMode = window.location.hostname === 'localhost';
-        if (this.debugMode) {
-          this.debugInfoEl.style.display = 'block';
-        }
+        // Les éléments restent cachés même en mode debug
       }
 
       async loadAvailableAssets() {
         try {
-          const response = await fetch('/api/assets');
-          if (response.ok) {
-            const assets = await response.json();
-            assets.forEach(asset => {
-              this.availableAssets.add(asset.name);
-            });
+          const res = await fetch('/api/assets');
+          if (res.ok) {
+            const assets = await res.json();
+            assets.forEach(a => this.availableAssets.add(a.name));
             console.log('✅ Assets loaded:', Array.from(this.availableAssets));
           }
-        } catch (error) {
-          console.error('❌ Asset loading error:', error);
+        } catch (e) {
+          console.error('❌ Asset loading error:', e);
         }
       }
 
       initRecordingControls() {
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-
-        startBtn.addEventListener('click', () => this.startRecording());
-        stopBtn.addEventListener('click', () => this.stopRecording());
-        downloadBtn.addEventListener('click', () => this.downloadSession());
+        document.getElementById('startBtn').addEventListener('click', () => this.startRecording());
+        document.getElementById('stopBtn').addEventListener('click',  () => this.stopRecording());
+        document.getElementById('downloadBtn').addEventListener('click',() => this.downloadSession());
       }
 
       async startRecording() {
-        try {
-          const response = await fetch('/api/sessions/start', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-
-          if (!response.ok) {
-            throw new Error('Error creating session');
-          }
-
-          const result = await response.json();
-          this.currentSessionId = result.sessionId;
-          this.isRecording = true;
-          this.recordingStartTime = Date.now();
-          this.recordingCount = 0;
-
-          document.getElementById('startBtn').disabled = true;
-          document.getElementById('stopBtn').disabled = false;
-          document.getElementById('downloadBtn').disabled = true;
-          
-          const statusEl = document.getElementById('recordingStatus');
-          statusEl.textContent = '🔴 Recording...';
-          statusEl.className = 'recording-status-large recording';
-
-          document.getElementById('recordingInfo').style.display = 'flex';
-
-          this.recordingTimer = setInterval(() => {
-            this.updateRecordingDisplay();
-          }, 1000);
-
-        } catch (error) {
-          // Remove alert - just log error
-          console.error('Recording start error:', error);
-        }
+        const res = await fetch('/api/sessions/start', { method: 'POST', headers:{'Content-Type':'application/json'} });
+        if (!res.ok) return;
+        const { sessionId } = await res.json();
+        this.currentSessionId   = sessionId;
+        this.isRecording        = true;
+        this.recordingStartTime = Date.now();
+        this.recordingCount     = 0;
+        
+        // Reset movement counters - NOUVEAU
+        this.goodMovementCount = 0;
+        this.badMovementCount = 0;
+        this.updateMovementCounters();
+        
+        document.getElementById('startBtn').disabled    = true;
+        document.getElementById('stopBtn').disabled     = false;
+        document.getElementById('downloadBtn').disabled = true;
+        document.getElementById('recordingInfo').style.display     = 'flex';
+        const statusEl = document.getElementById('recordingStatus');
+        statusEl.textContent = '🔴 Recording active';
+        statusEl.className   = 'recording-status-large recording';
+        this.recordingTimer   = setInterval(() => this.updateRecordingInfo(), 1000);
       }
 
       async stopRecording() {
-        if (!this.isRecording || !this.currentSessionId) return;
-
-        try {
-          const response = await fetch(`/api/sessions/${this.currentSessionId}/stop`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-
-          if (!response.ok) {
-            throw new Error('Error stopping session');
-          }
-
-          const result = await response.json();
-          this.downloadUrl = result.downloadUrl;
-
-          this.isRecording = false;
-          clearInterval(this.recordingTimer);
-
-          document.getElementById('startBtn').disabled = false;
-          document.getElementById('stopBtn').disabled = true;
-          document.getElementById('downloadBtn').disabled = false;
-          
-          const statusEl = document.getElementById('recordingStatus');
-          statusEl.textContent = `✅ Recording completed (${this.recordingCount} points)`;
-          statusEl.className = 'recording-status-large stopped';
-
-        } catch (error) {
-          // Remove alert - just log error
-          console.error('Recording stop error:', error);
-        }
+        if (!this.currentSessionId) return;
+        const res = await fetch(`/api/sessions/${this.currentSessionId}/stop`, { method: 'POST', headers:{'Content-Type':'application/json'} });
+        if (!res.ok) return;
+        const { downloadUrl } = await res.json();
+        this.downloadUrl = downloadUrl;
+        this.isRecording = false;
+        document.getElementById('startBtn').disabled    = false;
+        document.getElementById('stopBtn').disabled     = true;
+        document.getElementById('downloadBtn').disabled = false;
+        const statusEl = document.getElementById('recordingStatus');
+        statusEl.textContent = '✅ Recording complete';
+        statusEl.className   = 'recording-status-large complete';
+        clearInterval(this.recordingTimer);
       }
 
       downloadSession() {
-        if (this.downloadUrl) {
-          const link = document.createElement('a');
-          link.href = this.downloadUrl;
-          link.download = `${this.currentSessionId}.csv`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
+        if (this.downloadUrl) window.open(this.downloadUrl, '_blank');
       }
 
-      updateRecordingDisplay() {
-        if (!this.isRecording) return;
+      updateRecordingInfo() {
+        if (!this.recordingStartTime) return;
+        const secs = Math.floor((Date.now() - this.recordingStartTime) / 1000);
+        const m = Math.floor(secs / 60), s = secs % 60;
+        document.getElementById('recordingDuration').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+        document.getElementById('recordingCount').textContent    = this.recordingCount;
+      }
 
-        const duration = Math.floor((Date.now() - this.recordingStartTime) / 1000);
-        const minutes = Math.floor(duration / 60);
-        const seconds = duration % 60;
+      // NOUVELLE méthode pour mettre à jour les compteurs de mouvement
+      updateMovementCounters() {
+        document.getElementById('goodMovementCount').textContent = this.goodMovementCount;
+        document.getElementById('badMovementCount').textContent = this.badMovementCount;
+      }
+
+      // NOUVELLE méthode pour analyser le mouvement
+      analyzeMovement(motionalert) {
+        if (!this.isRecording || !motionalert) return;
         
-        document.getElementById('recordingDuration').textContent = 
-          `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        document.getElementById('recordingCount').textContent = this.recordingCount;
+        if (motionalert.includes('BAD MOVEMENT')) {
+          this.badMovementCount++;
+        } else {
+          this.goodMovementCount++;
+        }
+        
+        this.updateMovementCounters();
       }
 
       async recordDataPoint() {
         if (!this.isRecording || !this.currentSessionId) return;
-
         try {
-          const response = await fetch(`/api/sessions/${this.currentSessionId}/record`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-
-          if (response.ok) {
-            this.recordingCount++;
-          }
-        } catch (error) {
-          console.error('Failed to record data point:', error);
-          // Optional: show user feedback
-          const statusEl = document.getElementById('recordingStatus');
-          statusEl.textContent = `⚠️ Recording issue (${this.recordingCount} points)`;
-        }
+          await fetch(`/api/sessions/${this.currentSessionId}/record`, { method:'POST', headers:{'Content-Type':'application/json'} });
+          this.recordingCount++;
+        } catch {}
       }
 
       async fetchData() {
         try {
-          const response = await fetch(this.apiUrl, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Cache-Control': 'no-cache'
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          let data = await response.json();
-          
-          if (typeof data === 'string') {
-            data = JSON.parse(data);
-          }
-          
-          if (!data || typeof data !== 'object') {
-            throw new Error('Invalid format');
-          }
-          
-          this.successCount++;
-          this.errorCount = 0;
-          
-          return data;
-          
-        } catch (error) {
+          const res = await fetch('/api/sensor-data');
+          if (!res.ok) throw new Error(res.status);
+          let d = await res.json();
+          if (typeof d === 'string') d = JSON.parse(d);
+          this.successCount++; this.errorCount = 0;
+          return d;
+        } catch (e) {
           this.errorCount++;
-          this.updateStatus(`❌ Error: ${error.message}`, 'error');
+          // Code gardé - updateStatus fonctionne mais invisible
+          this.updateStatus(`❌ Error: ${e.message}`, 'error');
           return null;
         }
       }
 
-      updateMotionIndicator(motionAlert) {
-        if (!motionAlert) return;
-
-        // Clear existing classes
-        this.motionVisualEl.className = 'motion-visual-large';
+      updateMotionIndicator(motionalert) {
+        if (!motionalert) return;
+        
+        // NOUVEAU - Analyser le mouvement pour les compteurs
+        this.analyzeMovement(motionalert);
+        
+        this.motionVisualEl.className      = 'motion-visual-large';
         this.motionDescriptionEl.className = 'motion-description-large';
-
-        let fallbackIcon = '⚪';
-        let description;
-        let imageUrl = null;
-
-        // Extract image name (remove " - BAD MOVEMENT" suffix if present)
-        const imageName = motionAlert.replace(/ - BAD MOVEMENT$/i, '');
-
-        // Debug
+        const cleanName = motionalert.replace(/ - BAD MOVEMENT$/i, '');
+        let imageUrl = this.availableAssets.has(cleanName) ? `/assets/${cleanName}.png` : null;
+        let fallback = imageUrl ? null : '❓';
+        this.motionDescriptionEl.textContent = motionalert;
+        
+        // Code gardé - debug fonctionne mais invisible
         if (this.debugMode) {
-          this.debugAlertEl.textContent = imageName;
-        }
-
-        // Look for corresponding image in assets using the clean image name
-        if (this.availableAssets.has(imageName)) {
-          imageUrl = `/assets/${imageName}.png`;
-          description = motionAlert; // Keep the full alert with BAD MOVEMENT
-        } else {
-          // Just use the raw alert
-          fallbackIcon = '❓';
-          description = motionAlert;
-        }
-
-        // Debug
-        if (this.debugMode) {
+          this.debugAlertEl.textContent = cleanName;
           this.debugImageEl.textContent = imageUrl || 'Fallback';
         }
-
-        // Apply changes
-        this.motionDescriptionEl.textContent = description;
-
+        
         if (imageUrl) {
-          this.motionImageEl.src = imageUrl;
-          this.motionImageEl.style.display = 'block';
-          this.motionFallbackEl.style.display = 'none';
-
-          // Handle image loading error
+          this.motionImageEl.src             = imageUrl;
+          this.motionImageEl.style.display   = 'block';
+          this.motionFallbackEl.style.display= 'none';
           this.motionImageEl.onerror = () => {
             console.warn('❌ Cannot load image:', imageUrl);
-            this.motionImageEl.style.display = 'none';
-            this.motionFallbackEl.style.display = 'flex';
-            this.motionFallbackEl.textContent = fallbackIcon;
+            this.motionImageEl.style.display   = 'none';
+            this.motionFallbackEl.style.display= 'flex';
+            this.motionFallbackEl.textContent  = '⚪';
             this.motionVisualEl.classList.add('no-image');
           };
         } else {
-          // Use fallback
-          this.motionImageEl.style.display = 'none';
+          this.motionImageEl.style.display    = 'none';
           this.motionFallbackEl.style.display = 'flex';
-          this.motionFallbackEl.textContent = fallbackIcon;
+          this.motionFallbackEl.textContent   = fallback;
           this.motionVisualEl.classList.add('no-image');
         }
       }
 
-      formatMotionDescription(motionAlert) {
-        // Convert filename to readable description
-        const parts = motionAlert.split('_');
-        if (parts.length >= 2) {
-          const direction = parts[0]; // down, high, mid
-          const position = parts[1]; // center, left, right
-          const level = parts[2] || ''; // 0, 1, 2, etc.
-
-          let directionText = '';
-          switch (direction) {
-            case 'down': directionText = 'Head down'; break;
-            case 'high': directionText = 'Head up'; break;
-            case 'mid': directionText = 'Mid position'; break;
-            default: directionText = direction;
-          }
-
-          let positionText = '';
-          switch (position) {
-            case 'center': positionText = 'center'; break;
-            case 'left': positionText = 'left'; break;
-            case 'right': positionText = 'right'; break;
-            default: positionText = position;
-          }
-
-          const levelText = level ? ' (' + level + ')' : '';
-          return `${directionText} ${positionText}${levelText}`;
-        }
-        
-        return motionAlert;
-      }
-
-      updateStatus(message, type = '') {
-        this.statusEl.textContent = message;
-        this.statusEl.className = `status ${type}`;
+      // Code gardé - updateStatus fonctionne mais invisible
+      updateStatus(msg, type='') {
+        this.statusEl.textContent = msg;
+        this.statusEl.className   = `status ${type}`;
       }
 
       async refresh() {
         const data = await this.fetchData();
         if (data) {
           this.updateMotionIndicator(data.motionalert);
-          
-          if (this.isRecording) {
-            await this.recordDataPoint();
-          }
+          // Code gardé - updateStatus fonctionne mais invisible
+          this.updateStatus(`✅ Connected (${this.successCount} updates)`, 'success');
+          if (this.isRecording) await this.recordDataPoint();
         }
       }
 
@@ -609,28 +533,16 @@
       }
 
       stop() {
-        if (this.timer) {
-          clearInterval(this.timer);
-          this.timer = null;
-        }
-        
-        if (this.recordingTimer) {
-          clearInterval(this.recordingTimer);
-        }
+        clearInterval(this.timer);
+        clearInterval(this.recordingTimer);
       }
     }
 
-    // Automatic startup
     document.addEventListener('DOMContentLoaded', () => {
       window.dashboard = new MotionOnlyDashboard('/api/sensor-data', 1000);
       window.dashboard.start();
     });
-
-    window.addEventListener('beforeunload', () => {
-      if (window.dashboard) {
-        window.dashboard.stop();
-      }
-    });
+    window.addEventListener('beforeunload', () => window.dashboard.stop());
   </script>
 </body>
 </html>
