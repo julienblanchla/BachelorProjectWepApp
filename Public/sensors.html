@@ -8,7 +8,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Grille 2x2 spécifique pour les capteurs */
+    /* Container principal avec hauteur ajustée */
+    .sensors-only-container {
+      height: calc(100vh - 140px);
+      display: flex;
+      flex-direction: column;
+      max-width: 1400px;
+      margin: 0 auto;
+      gap: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    .sensors-only {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Grille 2x2 spécifique pour les capteurs avec hauteur corrigée */
     .sensors-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -16,7 +35,9 @@
       gap: 1.5rem;
       height: 100%;
       padding: 0.5rem;
-      max-height: calc(100vh - 200px);
+      max-height: calc(100vh - 220px); /* Augmenté pour laisser plus d'espace */
+      min-height: 500px; /* Hauteur minimale pour assurer l'affichage */
+      overflow: visible; /* Permet l'affichage des éléments qui dépassent légèrement */
     }
 
     .sensor-card-large {
@@ -30,23 +51,31 @@
       flex-direction: column;
       gap: 1rem;
       border: 1px solid rgba(203, 213, 225, 0.3);
-      overflow: hidden;
+      overflow: visible; /* Permet l'affichage des alertes qui dépassent */
+      min-height: 0;
+      position: relative; /* Pour éviter les problèmes de z-index */
     }
 
     .sensor-card-large:hover {
       transform: translateY(-3px);
       box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+      z-index: 10; /* Élève la carte au survol */
     }
 
     .sensor-card-large.accelerometer { border-left-color: #10b981; }
     .sensor-card-large.temperature { border-left-color: #f59e0b; }
     .sensor-card-large.humidity { border-left-color: #06b6d4; }
-    .sensor-card-large.air-quality { border-left-color: #8b5cf6; }
+    .sensor-card-large.air-quality { 
+      border-left-color: #8b5cf6;
+      /* Ajustement spécial pour Air Quality */
+      padding-bottom: 1.5rem; /* Plus d'espace en bas */
+    }
 
     .sensor-icon {
       font-size: 3rem;
       text-align: center;
       margin-bottom: 0.5rem;
+      flex-shrink: 0;
     }
 
     .sensor-title-large {
@@ -56,6 +85,7 @@
       text-align: center;
       margin-bottom: 1rem;
       letter-spacing: -0.025em;
+      flex-shrink: 0;
     }
 
     .sensor-value-large {
@@ -65,6 +95,7 @@
       text-align: center;
       font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
       margin: 0.5rem 0;
+      flex-shrink: 0;
     }
 
     .sensor-values-grid {
@@ -72,6 +103,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 0.8rem;
       margin-top: 1rem;
+      flex-shrink: 0;
     }
 
     .sensor-value-item {
@@ -107,6 +139,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0; /* Empêche la compression */
+      position: relative; /* Pour s'assurer qu'elle reste visible */
+      z-index: 5;
     }
 
     .alert-message-large.good { 
@@ -131,14 +166,22 @@
       display: none;
     }
 
-    /* Air Quality grid spéciale */
+    /* Air Quality grid spéciale avec ajustements */
     .air-quality .sensor-values-grid {
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
+      margin-bottom: 1rem; /* Espace pour l'alerte */
     }
 
     .air-quality .sensor-value-item .sensor-value-large {
       font-size: 1.1rem;
+    }
+
+    /* Ajustement spécial pour l'alerte Air Quality */
+    .air-quality .alert-message-large {
+      margin-top: 0.5rem;
+      flex-shrink: 0;
+      min-height: 50px; /* Hauteur garantie */
     }
 
     /* Responsive pour maintenir 2x2 */
@@ -146,6 +189,7 @@
       .sensors-grid {
         gap: 1rem;
         padding: 0.3rem;
+        max-height: calc(100vh - 200px);
       }
       
       .sensor-card-large {
@@ -166,11 +210,17 @@
     }
 
     @media (max-width: 768px) {
+      .sensors-only-container {
+        height: calc(100vh - 120px);
+      }
+
       .sensors-grid {
         grid-template-columns: 1fr;
         grid-template-rows: repeat(4, auto);
-        max-height: none;
+        max-height: none; /* Supprime la contrainte de hauteur sur mobile */
         gap: 1rem;
+        padding: 0.5rem;
+        overflow: visible;
       }
       
       .sensor-card-large {
@@ -185,6 +235,11 @@
       
       .air-quality .sensor-values-grid {
         grid-template-columns: 1fr 1fr;
+      }
+
+      .air-quality .alert-message-large {
+        margin-top: 1rem;
+        min-height: 45px;
       }
     }
 
@@ -216,6 +271,12 @@
       
       .sensor-value-item .sensor-value-large {
         font-size: 1rem;
+      }
+
+      .alert-message-large {
+        padding: 0.5rem;
+        min-height: 40px;
+        font-size: 0.85rem;
       }
     }
   </style>
@@ -251,191 +312,240 @@
   </div>
 
   <script>
-    class SensorsOnlyDashboard {
-      constructor(apiUrl, intervalMs = 1000) {
-        this.apiUrl = apiUrl;
-        this.intervalMs = intervalMs;
-        this.timer = null;
-        this.sensorsGridEl = document.getElementById('sensorsGrid');
-        this.errorCount = 0;
-        this.successCount = 0;
-        
-        this.initSensorCards();
-      }
+class SensorsOnlyDashboard {
+  constructor(apiUrl, intervalMs = 1000) {
+    this.apiUrl = apiUrl;
+    this.intervalMs = intervalMs;
+    this.timer = null;
+    this.sensorsGridEl = document.getElementById('sensorsGrid');
+    this.errorCount = 0;
+    this.successCount = 0;
+    
+    this.initSensorCards();
+  }
 
-      initSensorCards() {
-        this.sensorsGridEl.innerHTML = `
-          <!-- Capteur 1: Accelerometer (Top Left) -->
-          <div class="sensor-card-large accelerometer">
-            <div class="sensor-icon">🏃</div>
-            <div class="sensor-title-large">Accelerometer</div>
-            <div class="sensor-values-grid">
-              <div class="sensor-value-item">
-                <div class="sensor-value-label">X</div>
-                <div class="sensor-value-large" id="accel-x">--</div>
-              </div>
-              <div class="sensor-value-item">
-                <div class="sensor-value-label">Y</div>
-                <div class="sensor-value-large" id="accel-y">--</div>
-              </div>
-              <div class="sensor-value-item">
-                <div class="sensor-value-label">Z</div>
-                <div class="sensor-value-large" id="accel-z">--</div>
-              </div>
-            </div>
+  initSensorCards() {
+    this.sensorsGridEl.innerHTML = `
+      <!-- Capteur 1: Accelerometer (Top Left) -->
+      <div class="sensor-card-large accelerometer">
+        <div class="sensor-icon">🏃</div>
+        <div class="sensor-title-large">Accelerometer</div>
+        <div class="sensor-values-grid">
+          <div class="sensor-value-item">
+            <div class="sensor-value-label">X</div>
+            <div class="sensor-value-large" id="accel-x">--</div>
           </div>
-          
-          <!-- Capteur 2: Temperature (Top Right) -->
-          <div class="sensor-card-large temperature">
-            <div class="sensor-icon">🌡️</div>
-            <div class="sensor-title-large">Temperature</div>
-            <div class="sensor-value-large" id="temperature">-- °C</div>
-            <div class="alert-message-large" id="temp-alert"></div>
+          <div class="sensor-value-item">
+            <div class="sensor-value-label">Y</div>
+            <div class="sensor-value-large" id="accel-y">--</div>
           </div>
-          
-          <!-- Capteur 3: Humidity (Bottom Left) -->
-          <div class="sensor-card-large humidity">
-            <div class="sensor-icon">💧</div>
-            <div class="sensor-title-large">Humidity</div>
-            <div class="sensor-value-large" id="humidity">-- %</div>
-            <div class="alert-message-large" id="humidity-alert"></div>
+          <div class="sensor-value-item">
+            <div class="sensor-value-label">Z</div>
+            <div class="sensor-value-large" id="accel-z">--</div>
           </div>
-          
-          <!-- Capteur 4: Air Quality (Bottom Right) -->
-          <div class="sensor-card-large air-quality">
-            <div class="sensor-icon">🌬️</div>
-            <div class="sensor-title-large">Air Quality</div>
-            <div class="sensor-values-grid">
-              <div class="sensor-value-item">
-                <div class="sensor-value-label">CO₂</div>
-                <div class="sensor-value-large" id="co2">--</div>
-              </div>
-              <div class="sensor-value-item">
-                <div class="sensor-value-label">TVOC</div>
-                <div class="sensor-value-large" id="tvoc">--</div>
-              </div>
-            </div>
-            <div class="alert-message-large" id="air-alert"></div>
+        </div>
+      </div>
+      
+      <!-- Capteur 2: Temperature (Top Right) -->
+      <div class="sensor-card-large temperature">
+        <div class="sensor-icon">🌡️</div>
+        <div class="sensor-title-large">Temperature</div>
+        <div class="sensor-value-large" id="temperature">-- °C</div>
+        <div class="alert-message-large" id="temp-alert"></div>
+      </div>
+      
+      <!-- Capteur 3: Humidity (Bottom Left) -->
+      <div class="sensor-card-large humidity">
+        <div class="sensor-icon">💧</div>
+        <div class="sensor-title-large">Humidity</div>
+        <div class="sensor-value-large" id="humidity">-- %</div>
+        <div class="alert-message-large" id="humidity-alert"></div>
+      </div>
+      
+      <!-- Capteur 4: Air Quality (Bottom Right) -->
+      <div class="sensor-card-large air-quality">
+        <div class="sensor-icon">🌬️</div>
+        <div class="sensor-title-large">Air Quality</div>
+        <div class="sensor-values-grid">
+          <div class="sensor-value-item">
+            <div class="sensor-value-label">CO₂</div>
+            <div class="sensor-value-large" id="co2">--</div>
           </div>
-        `;
+          <div class="sensor-value-item">
+            <div class="sensor-value-label">TVOC</div>
+            <div class="sensor-value-large" id="tvoc">--</div>
+          </div>
+        </div>
+        <div class="alert-message-large" id="air-alert">Loading air quality status...</div>
+      </div>
+    `;
+  }
+
+  async fetchData() {
+    try {
+      const response = await fetch(this.apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
-
-      async fetchData() {
-        try {
-          const response = await fetch(this.apiUrl, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Cache-Control': 'no-cache'
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          let data = await response.json();
-          
-          if (typeof data === 'string') {
-            data = JSON.parse(data);
-          }
-          
-          if (!data || typeof data !== 'object') {
-            throw new Error('Invalid format');
-          }
-          
-          this.successCount++;
-          this.errorCount = 0;
-          
-          return data;
-          
-        } catch (error) {
-          this.errorCount++;
-          // Suppression de l'affichage d'erreur (pas de statusEl)
-          return null;
-        }
+      
+      let data = await response.json();
+      
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
       }
-
-      updateSensorCards(data) {
-        if (!data) return;
-        
-        // Accelerometer data
-        if (data.accelerometer) {
-          document.getElementById('accel-x').textContent = data.accelerometer.x.toFixed(2);
-          document.getElementById('accel-y').textContent = data.accelerometer.y.toFixed(2);
-          document.getElementById('accel-z').textContent = data.accelerometer.z.toFixed(2);
-        }
-
-        // Temperature data
-        if (data.temperature !== undefined) {
-          document.getElementById('temperature').textContent = `${data.temperature.toFixed(1)} °C`;
-          const tempAlert = document.getElementById('temp-alert');
-          tempAlert.textContent = data.temperaturealert || '';
-          tempAlert.className = this.getAlertClass(data.temperaturealert) + ' alert-message-large';
-        }
-
-        // Humidity data
-        if (data.humidity !== undefined) {
-          document.getElementById('humidity').textContent = `${data.humidity} %`;
-          const humAlert = document.getElementById('humidity-alert');
-          humAlert.textContent = data.humidityalert || '';
-          humAlert.className = this.getAlertClass(data.humidityalert) + ' alert-message-large';
-        }
-
-        // Air Quality data
-        if (data.air_quality) {
-          document.getElementById('co2').textContent = data.air_quality.CO2;
-          document.getElementById('tvoc').textContent = data.air_quality.TVOC;
-          const airAlert = document.getElementById('air-alert');
-          airAlert.textContent = data.air_qualityalert || '';
-          airAlert.className = this.getAlertClass(data.air_qualityalert) + ' alert-message-large';
-        }
+      
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid format');
       }
+      
+      this.successCount++;
+      this.errorCount = 0;
+      
+      return data;
+      
+    } catch (error) {
+      this.errorCount++;
+      console.error('Fetch error:', error);
+      return null;
+    }
+  }
 
-      getAlertClass(alertText) {
-        if (!alertText) return 'alert-message';
-        
-        const text = alertText.toLowerCase();
-        if (text.includes('no alert') || text.includes('good')) {
-          return 'alert-message good';
-        } else if (text.includes('poor') || text.includes('bad') || text.includes('high')) {
-          return 'alert-message danger';
-        } else {
-          return 'alert-message warning';
-        }
-      }
-
-      async refresh() {
-        const data = await this.fetchData();
-        if (data) {
-          this.updateSensorCards(data);
-        }
-      }
-
-      start() {
-        this.refresh();
-        this.timer = setInterval(() => this.refresh(), this.intervalMs);
-      }
-
-      stop() {
-        if (this.timer) {
-          clearInterval(this.timer);
-          this.timer = null;
-        }
-      }
+  updateSensorCards(data) {
+    if (!data) return;
+    
+    console.log('Received data:', data); // Debug log
+    
+    // Accelerometer data
+    if (data.accelerometer) {
+      document.getElementById('accel-x').textContent = data.accelerometer.x.toFixed(2);
+      document.getElementById('accel-y').textContent = data.accelerometer.y.toFixed(2);
+      document.getElementById('accel-z').textContent = data.accelerometer.z.toFixed(2);
     }
 
-    // Automatic startup
-    document.addEventListener('DOMContentLoaded', () => {
-      window.dashboard = new SensorsOnlyDashboard('/api/sensor-data', 1000);
-      window.dashboard.start();
-    });
+    // Temperature data
+    if (data.temperature !== undefined) {
+      document.getElementById('temperature').textContent = `${data.temperature.toFixed(1)} °C`;
+      const tempAlert = document.getElementById('temp-alert');
+      const tempAlertText = data.temperaturealert || '';
+      tempAlert.textContent = tempAlertText;
+      tempAlert.className = this.getAlertClass(tempAlertText) + ' alert-message-large';
+      if (!tempAlertText) tempAlert.style.display = 'none';
+      else tempAlert.style.display = 'flex';
+    }
 
-    window.addEventListener('beforeunload', () => {
-      if (window.dashboard) {
-        window.dashboard.stop();
+    // Humidity data
+    if (data.humidity !== undefined) {
+      document.getElementById('humidity').textContent = `${data.humidity} %`;
+      const humAlert = document.getElementById('humidity-alert');
+      const humAlertText = data.humidityalert || '';
+      humAlert.textContent = humAlertText;
+      humAlert.className = this.getAlertClass(humAlertText) + ' alert-message-large';
+      if (!humAlertText) humAlert.style.display = 'none';
+      else humAlert.style.display = 'flex';
+    }
+
+    // Air Quality data - Fixed version using same logic as index.html
+    const airAlert = document.getElementById('air-alert');
+    
+    if (data.air_quality) {
+      console.log('Air quality data found:', data.air_quality); // Debug
+      
+      // Update values
+      document.getElementById('co2').textContent = data.air_quality.CO2 || '--';
+      document.getElementById('tvoc').textContent = data.air_quality.TVOC || '--';
+      
+      // Get alert text using same logic as index.html
+      let airAlertText = data.air_qualityalert || '';
+      
+      console.log('Air quality alert from API:', airAlertText); // Debug
+      
+      // If no alert from API, generate one based on values (same as index.html)
+      if (!airAlertText && data.air_quality.CO2 && data.air_quality.TVOC) {
+        const co2Value = parseInt(data.air_quality.CO2) || 0;
+        const tvocValue = parseInt(data.air_quality.TVOC) || 0;
+        
+        if (co2Value > 1000 || tvocValue > 1000) {
+          airAlertText = 'Poor air quality - High CO₂ or TVOC levels detected';
+        } else if (co2Value > 800 || tvocValue > 500) {
+          airAlertText = 'Moderate air quality - Consider ventilation';
+        } else if (co2Value > 0 || tvocValue > 0) {
+          airAlertText = 'Good air quality - No alerts';
+        }
       }
-    });
+      
+      // Final fallback
+      if (!airAlertText) {
+        airAlertText = 'Air quality monitoring active';
+      }
+      
+      console.log('Final air alert text:', airAlertText); // Debug
+      
+      airAlert.textContent = airAlertText;
+      airAlert.className = this.getAlertClass(airAlertText) + ' alert-message-large';
+      airAlert.style.display = 'flex';
+      
+    } else {
+      // No air quality data at all
+      console.log('No air quality data received'); // Debug
+      airAlert.textContent = 'No air quality data available';
+      airAlert.className = 'alert-message-large warning';
+      airAlert.style.display = 'flex';
+    }
+  }
+
+  getAlertClass(alertText) {
+    if (!alertText) return 'alert-message';
+    
+    const text = alertText.toLowerCase();
+    if (text.includes('no alert') || text.includes('good') || text.includes('excellent')) {
+      return 'alert-message good';
+    } else if (text.includes('poor') || text.includes('bad') || text.includes('high') || text.includes('danger')) {
+      return 'alert-message danger';
+    } else if (text.includes('moderate') || text.includes('medium') || text.includes('consider')) {
+      return 'alert-message warning';
+    } else {
+      return 'alert-message warning';
+    }
+  }
+
+  async refresh() {
+    const data = await this.fetchData();
+    if (data) {
+      this.updateSensorCards(data);
+    }
+  }
+
+  start() {
+    this.refresh();
+    this.timer = setInterval(() => this.refresh(), this.intervalMs);
+  }
+
+  stop() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+}
+
+// Automatic startup
+document.addEventListener('DOMContentLoaded', () => {
+  window.dashboard = new SensorsOnlyDashboard('/api/sensor-data', 1000);
+  window.dashboard.start();
+});
+
+window.addEventListener('beforeunload', () => {
+  if (window.dashboard) {
+    window.dashboard.stop();
+  }
+});
   </script>
 </body>
 </html>
