@@ -12,7 +12,7 @@
       height: calc(100vh - 140px);
       display: flex;
       flex-direction: column;
-      max-width: 900px;
+      max-width: 1200px;
       margin: 0 auto;
       gap: 1rem;
     }
@@ -21,9 +21,9 @@
       flex: 1;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+      padding: 2rem; /* Réduit de 3rem */
       border: 1px solid rgba(255, 255, 255, 0.2);
       display: flex;
       flex-direction: column;
@@ -34,18 +34,18 @@
     }
 
     .motion-visual-large {
-      width: 250px;
-      height: 250px;
-      border-radius: 16px;
-      margin: 1.5rem 0;
+      width: 450px; /* Augmenté de 400px pour plus de visibilité */
+      height: 450px; /* Augmenté de 400px pour plus de visibilité */
+      border-radius: 20px;
+      margin: 1rem 0; /* Réduit de 2rem pour plus d'espace pour l'image */
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
       overflow: hidden;
       position: relative;
       background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-      border: 4px solid rgba(255, 255, 255, 0.9);
+      border: 6px solid rgba(255, 255, 255, 0.9);
     }
 
     .motion-visual-large img {
@@ -54,122 +54,129 @@
       width: auto;
       height: auto;
       object-fit: contain;
-      border-radius: 12px;
+      border-radius: 16px;
     }
 
     .motion-visual-large.no-image {
-      font-size: 4rem;
+      font-size: 6rem;
       color: #666;
       font-weight: bold;
     }
 
-    .motion-title-large {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 0.8rem;
-    }
+    /* TITRE SUPPRIMÉ - plus de .motion-title-large */
 
     .motion-description-large {
-      font-size: 1.2rem;
+      font-size: 0.9rem; /* FORTEMENT réduit de 1.4rem */
       color: #666;
-      margin-top: 1.5rem;
-      padding: 1rem;
+      margin-top: 1rem; /* Réduit de 2rem */
+      padding: 0.6rem 0.8rem; /* FORTEMENT réduit de 1.5rem */
       background: rgba(248, 249, 250, 0.8);
-      border-radius: 10px;
-      border-left: 4px solid #e9ecef;
-      max-width: 350px;
+      border-radius: 8px; /* Réduit de 12px */
+      border-left: 3px solid #e9ecef; /* Réduit de 6px */
+      max-width: 300px; /* FORTEMENT réduit de 500px */
       text-align: center;
-      font-weight: 500;
+      font-weight: 400; /* Réduit de 500 */
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Réduit */
+      word-wrap: break-word;
+      line-height: 1.2;
     }
 
     .recording-section-large {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      padding: 1.5rem;
+      border-radius: 16px; /* Réduit de 20px */
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1); /* Réduit */
+      padding: 1.2rem; /* FORTEMENT réduit de 2rem */
       border: 1px solid rgba(255, 255, 255, 0.2);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 1.5rem;
+      gap: 1.2rem; /* Réduit de 2rem */
       flex-shrink: 0;
-      min-height: 100px;
+      min-height: 80px; /* FORTEMENT réduit de 120px */
     }
 
     .recording-left-large {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.4rem; /* Réduit de 0.8rem */
+    }
+
+    .recording-left-large h2 {
+      margin: 0;
+      font-size: 1rem; /* Réduit de 1.3rem */
     }
 
     .recording-status-large {
       font-weight: 600;
-      font-size: 1rem;
-      padding: 0.8rem 1.2rem;
-      border-radius: 8px;
+      font-size: 0.85rem; /* Réduit de 1.1rem */
+      padding: 0.6rem 1rem; /* Réduit de 1rem 1.5rem */
+      border-radius: 8px; /* Réduit de 10px */
     }
 
     .recording-center-large {
       display: flex;
-      gap: 0.8rem;
+      gap: 0.8rem; /* Réduit de 1rem */
       align-items: center;
       flex-wrap: wrap;
     }
 
     .btn-large {
-      padding: 0.8rem 1.5rem;
+      padding: 0.7rem 1.4rem; /* Réduit de 1rem 2rem */
       border: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      border-radius: 8px; /* Réduit de 10px */
+      font-size: 0.85rem; /* Réduit de 1rem */
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+      gap: 0.4rem; /* Réduit de 0.5rem */
+      box-shadow: 0 3px 12px rgba(0,0,0,0.1); /* Réduit */
     }
 
     .recording-right-large {
       display: flex;
-      gap: 1.5rem;
+      gap: 1.2rem; /* Réduit de 2rem */
       align-items: center;
-      font-size: 0.9rem;
+      font-size: 0.85rem; /* Réduit de 1rem */
       flex-wrap: wrap;
     }
 
     .recording-info-item-large {
       text-align: center;
       background: rgba(248, 249, 250, 0.8);
-      padding: 0.8rem 1.2rem;
-      border-radius: 8px;
-      min-width: 70px;
+      padding: 0.6rem 1rem; /* Réduit de 1rem 1.5rem */
+      border-radius: 8px; /* Réduit de 10px */
+      min-width: 60px; /* Réduit de 80px */
     }
 
     .recording-info-item-large strong {
       display: block;
       color: #007bff;
-      font-size: 1.2rem;
+      font-size: 1.1rem; /* Réduit de 1.4rem */
       font-weight: 700;
     }
 
-    /* Nouveau style pour les compteurs de mouvement */
+    .recording-info-item-large span {
+      font-size: 0.75rem; /* Ajouté pour réduire les labels */
+    }
+
+    /* Compteurs de mouvement réduits */
     .movement-counters {
       display: flex;
-      gap: 1rem;
-      margin-left: 1rem;
+      gap: 1rem; /* Réduit de 1.5rem */
+      margin-left: 1rem; /* Réduit de 1.5rem */
     }
 
     .movement-counter-item {
       text-align: center;
       background: rgba(248, 249, 250, 0.9);
-      padding: 0.8rem 1rem;
-      border-radius: 8px;
-      min-width: 70px;
-      border: 2px solid transparent;
+      padding: 0.6rem 1rem; /* Réduit de 1rem 1.5rem */
+      border-radius: 8px; /* Réduit de 10px */
+      min-width: 60px; /* Réduit de 80px */
+      border: 2px solid transparent; /* Réduit de 3px */
     }
 
     .movement-counter-item.good {
@@ -184,7 +191,7 @@
 
     .movement-counter-item strong {
       display: block;
-      font-size: 1.2rem;
+      font-size: 1.1rem; /* Réduit de 1.4rem */
       font-weight: 700;
     }
 
@@ -197,45 +204,209 @@
     }
 
     .movement-counter-item span {
-      font-size: 0.8rem;
+      font-size: 0.75rem; /* Réduit de 0.9rem */
       color: #64748b;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
-    @media (max-width: 768px) {
+    /* Classes pour les couleurs d'état des boutons */
+    .btn-start {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+
+    .btn-start:hover:not(:disabled) {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+    }
+
+    .btn-stop {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+    }
+
+    .btn-stop:hover:not(:disabled) {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      transform: translateY(-1px);
+    }
+
+    .btn-download {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+    }
+
+    .btn-download:hover:not(:disabled) {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      transform: translateY(-1px);
+    }
+
+    .btn-large:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Classes pour les statuts d'enregistrement */
+    .recording-status-large.idle {
+      background: rgba(156, 163, 175, 0.2);
+      color: #4b5563;
+      border: 2px solid rgba(156, 163, 175, 0.3);
+    }
+
+    .recording-status-large.recording {
+      background: rgba(239, 68, 68, 0.2);
+      color: #dc2626;
+      border: 2px solid rgba(239, 68, 68, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    .recording-status-large.complete {
+      background: rgba(16, 185, 129, 0.2);
+      color: #059669;
+      border: 2px solid rgba(16, 185, 129, 0.3);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Responsive amélioré pour les nouvelles tailles */
+    @media (max-width: 1200px) {
       .motion-only-container {
-        height: calc(100vh - 120px);
+        max-width: 1000px;
       }
       
       .motion-visual-large {
-        width: 180px;
-        height: 180px;
+        width: 380px; /* Réduit mais gardé assez grand */
+        height: 380px;
       }
 
       .motion-visual-large.no-image {
-        font-size: 3rem;
+        font-size: 5rem;
       }
 
       .motion-description-large {
-        font-size: 1rem;
+        font-size: 0.85rem;
         max-width: 280px;
+        padding: 0.5rem 0.7rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .motion-only-container {
+        height: calc(100vh - 120px);
+        max-width: 100%;
+        padding: 0 1rem;
+      }
+      
+      .motion-display {
+        padding: 1.5rem;
+      }
+      
+      .motion-visual-large {
+        width: 300px; /* Réduit pour mobile mais gardé visible */
+        height: 300px;
+        margin: 0.8rem 0;
+      }
+
+      .motion-visual-large.no-image {
+        font-size: 4rem;
+      }
+
+      .motion-description-large {
+        font-size: 0.8rem;
+        max-width: 250px;
+        padding: 0.4rem 0.6rem;
+        margin-top: 0.8rem;
       }
 
       .recording-section-large {
         flex-direction: column;
         text-align: center;
         padding: 1rem;
-      }
-      
-      .motion-title-large {
-        font-size: 1.3rem;
+        gap: 1rem;
+        min-height: 60px;
       }
 
       .movement-counters {
         margin-left: 0;
         justify-content: center;
+        gap: 0.8rem;
+      }
+
+      .recording-right-large {
+        gap: 1rem;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .motion-display {
+        padding: 1rem;
+      }
+      
+      .motion-visual-large {
+        width: 250px;
+        height: 250px;
+        border: 4px solid rgba(255, 255, 255, 0.9);
+      }
+
+      .motion-visual-large.no-image {
+        font-size: 3.5rem;
+      }
+
+      .motion-description-large {
+        font-size: 0.75rem;
+        max-width: 200px;
+        padding: 0.3rem 0.5rem;
+      }
+
+      .btn-large {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.8rem;
+      }
+
+      .movement-counter-item {
+        padding: 0.5rem 0.8rem;
+        min-width: 50px;
+      }
+
+      .movement-counter-item strong {
+        font-size: 1rem;
+      }
+
+      .recording-info-item-large {
+        padding: 0.5rem 0.8rem;
+        min-width: 50px;
+      }
+
+      .recording-info-item-large strong {
+        font-size: 1rem;
+      }
+    }
+
+    /* Effet hover amélioré pour la plus grande taille */
+    .motion-visual-large:hover {
+      transform: scale(1.02);
+      transition: transform 0.3s ease;
+    }
+
+    /* Animation d'entrée pour l'image */
+    .motion-visual-large img {
+      animation: imageAppear 0.5s ease-in-out;
+    }
+
+    @keyframes imageAppear {
+      0% {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
       }
     }
   </style>
@@ -254,7 +425,6 @@
     </div>
 
     <div class="motion-display">
-      <div class="motion-title-large">🏃 Motion Detection</div>
       <div id="motionVisual" class="motion-visual-large neutral">
         <img id="motionImage" src="" alt="Avatar" style="display: none;">
         <span id="motionFallback">⚪</span>
