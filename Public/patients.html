@@ -984,280 +984,389 @@
   <script>
 class ReportGenerator {
   constructor() {
-    this.loadJsPDF();
+    this.jsPDFLoaded = false;
   }
 
   async loadJsPDF() {
-    if (!window.jsPDF) {
+    if (this.jsPDFLoaded && window.jsPDF) {
+      return true;
+    }
+
+    return new Promise((resolve, reject) => {
+      // Vérifier si jsPDF est déjà chargé
+      if (window.jsPDF) {
+        this.jsPDFLoaded = true;
+        console.log('✅ jsPDF already available');
+        resolve(true);
+        return;
+      }
+
+      console.log('📦 Loading jsPDF...');
       const script = document.createElement('script');
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-      document.head.appendChild(script);
+      script.async = true;
       
-      return new Promise((resolve) => {
-        script.onload = () => {
-          console.log('✅ jsPDF loaded');
-          resolve();
-        };
-      });
-    }
+      script.onload = () => {
+        // Attendre un moment pour que jsPDF soit complètement initialisé
+        setTimeout(() => {
+          if (window.jsPDF) {
+            this.jsPDFLoaded = true;
+            console.log('✅ jsPDF loaded successfully');
+            resolve(true);
+          } else {
+            console.error('❌ jsPDF failed to initialize');
+            reject(new Error('jsPDF failed to initialize'));
+          }
+        }, 100);
+      };
+      
+      script.onerror = () => {
+        console.error('❌ Failed to load jsPDF script');
+        reject(new Error('Failed to load jsPDF script'));
+      };
+      
+      document.head.appendChild(script);
+    });
   }
 
   async generatePatientReport(patientId, dateRange = 30) {
-    await this.loadJsPDF();
-    
-    const patient = this.getPatient(patientId);
-    if (!patient) {
-      throw new Error('Patient not found');
+    try {
+      console.log('🔄 Starting PDF generation for patient:', patientId);
+      
+      // Charger jsPDF
+      await this.loadJsPDF();
+      
+      const patient = this.getPatient(patientId);
+      if (!patient) {
+        throw new Error('Patient not found');
+      }
+
+      console.log('👤 Patient found:', patient.firstName, patient.lastName);
+
+      const sessions = this.getPatientSessions(patientId, dateRange);
+      const annotations = this.getPatientAnnotations(patientId);
+
+      console.log('📊 Sessions found:', sessions.length);
+      console.log('📝 Annotations found:', annotations.length);
+
+      // Créer le document PDF
+      const { jsPDF } = window.jsPDF;
+      const doc = new jsPDF();
+
+      // Ajouter le contenu
+      this.addHeader(doc, patient);
+      this.addPatientSummary(doc, patient, sessions);
+      this.addSessionsSection(doc, sessions);
+      this.addAnnotationsSection(doc, annotations);
+      this.addRecommendations(doc, sessions);
+
+      console.log('✅ PDF content added successfully');
+
+      // Retourner le blob
+      const pdfBlob = doc.output('blob');
+      console.log('📄 PDF blob created:', pdfBlob.size, 'bytes');
+      
+      return pdfBlob;
+
+    } catch (error) {
+      console.error('❌ PDF generation error:', error);
+      throw error;
     }
-
-    const sessions = this.getPatientSessions(patientId, dateRange);
-    const annotations = this.getPatientAnnotations(patientId);
-
-    const { jsPDF } = window.jsPDF;
-    const doc = new jsPDF();
-
-    this.addHeader(doc, patient);
-    this.addPatientSummary(doc, patient, sessions);
-    this.addSessionsSection(doc, sessions);
-    this.addAnnotationsSection(doc, annotations);
-    this.addRecommendations(doc, sessions);
-
-    return doc.output('blob');
   }
 
   addHeader(doc, patient) {
-    doc.setFontSize(20);
-    doc.setTextColor(40, 40, 40);
-    doc.text('Nordic Thingy - Patient Report', 20, 25);
-    
-    doc.setFontSize(14);
-    doc.text(`Patient: ${patient.firstName} ${patient.lastName}`, 20, 40);
-    doc.text(`ID: ${patient.id}`, 20, 50);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 60);
-    
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 70, 190, 70);
+    try {
+      doc.setFontSize(20);
+      doc.setTextColor(40, 40, 40);
+      doc.text('Nordic Thingy - Patient Report', 20, 25);
+      
+      doc.setFontSize(14);
+      doc.text(`Patient: ${patient.firstName} ${patient.lastName}`, 20, 40);
+      doc.text(`ID: ${patient.id}`, 20, 50);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 60);
+      
+      // Ligne de séparation
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, 70, 190, 70);
+    } catch (error) {
+      console.error('Error adding header:', error);
+    }
   }
 
   addPatientSummary(doc, patient, sessions) {
-    let yPosition = 85;
-    
-    doc.setFontSize(16);
-    doc.setTextColor(0, 123, 255);
-    doc.text('Patient Information', 20, yPosition);
-    
-    yPosition += 15;
-    doc.setFontSize(11);
-    doc.setTextColor(40, 40, 40);
-    
-    const age = this.calculateAge(patient.dateOfBirth);
-    doc.text(`Name: ${patient.firstName} ${patient.lastName}`, 25, yPosition);
-    yPosition += 8;
-    doc.text(`Age: ${age}`, 25, yPosition);
-    yPosition += 8;
-    doc.text(`Phone: ${patient.phone || 'Not specified'}`, 25, yPosition);
-    yPosition += 8;
-    doc.text(`Email: ${patient.email || 'Not specified'}`, 25, yPosition);
-    yPosition += 15;
-    
-    doc.setFontSize(16);
-    doc.setTextColor(0, 123, 255);
-    doc.text('Exercise Statistics', 20, yPosition);
-    
-    yPosition += 15;
-    doc.setFontSize(11);
-    doc.setTextColor(40, 40, 40);
-    
-    const totalSessions = sessions.length;
-    const avgAccuracy = sessions.length > 0 ? 
-      Math.round(sessions.reduce((acc, s) => acc + (s.accuracy || 0), 0) / sessions.length) : 0;
-    
-    doc.text(`Total Sessions: ${totalSessions}`, 25, yPosition);
-    yPosition += 8;
-    doc.text(`Average Accuracy: ${avgAccuracy}%`, 25, yPosition);
-    yPosition += 8;
-    doc.text(`Last Session: ${sessions[0]?.date ? new Date(sessions[0].date).toLocaleDateString() : 'No sessions'}`, 25, yPosition);
+    try {
+      let yPosition = 85;
+      
+      doc.setFontSize(16);
+      doc.setTextColor(0, 123, 255);
+      doc.text('Patient Information', 20, yPosition);
+      
+      yPosition += 15;
+      doc.setFontSize(11);
+      doc.setTextColor(40, 40, 40);
+      
+      const age = this.calculateAge(patient.dateOfBirth);
+      doc.text(`Name: ${patient.firstName} ${patient.lastName}`, 25, yPosition);
+      yPosition += 8;
+      doc.text(`Age: ${age}`, 25, yPosition);
+      yPosition += 8;
+      doc.text(`Phone: ${patient.phone || 'Not specified'}`, 25, yPosition);
+      yPosition += 8;
+      doc.text(`Email: ${patient.email || 'Not specified'}`, 25, yPosition);
+      yPosition += 15;
+      
+      // Statistiques d'exercices
+      doc.setFontSize(16);
+      doc.setTextColor(0, 123, 255);
+      doc.text('Exercise Statistics', 20, yPosition);
+      
+      yPosition += 15;
+      doc.setFontSize(11);
+      doc.setTextColor(40, 40, 40);
+      
+      const totalSessions = sessions.length;
+      const avgAccuracy = sessions.length > 0 ? 
+        Math.round(sessions.reduce((acc, s) => acc + (s.accuracy || 0), 0) / sessions.length) : 0;
+      
+      doc.text(`Total Sessions: ${totalSessions}`, 25, yPosition);
+      yPosition += 8;
+      doc.text(`Average Accuracy: ${avgAccuracy}%`, 25, yPosition);
+      yPosition += 8;
+      doc.text(`Last Session: ${sessions[0]?.date ? new Date(sessions[0].date).toLocaleDateString() : 'No sessions'}`, 25, yPosition);
+    } catch (error) {
+      console.error('Error adding patient summary:', error);
+    }
   }
 
   addSessionsSection(doc, sessions) {
-    let yPosition = 180;
-    
-    doc.setFontSize(16);
-    doc.setTextColor(0, 123, 255);
-    doc.text('Recent Exercise Sessions', 20, yPosition);
-    
-    yPosition += 15;
-    doc.setFontSize(10);
-    doc.setTextColor(40, 40, 40);
-    
-    if (sessions.length === 0) {
-      doc.text('No exercise sessions found.', 25, yPosition);
-      return;
-    }
-    
-    sessions.slice(0, 10).forEach((session, index) => {
-      const sessionDate = new Date(session.date).toLocaleDateString();
-      doc.text(`${index + 1}. ${sessionDate} - ${session.exerciseType}`, 25, yPosition);
-      yPosition += 6;
-      doc.text(`   Duration: ${session.duration || 'Unknown'}, Accuracy: ${session.accuracy || 0}%`, 30, yPosition);
-      yPosition += 10;
+    try {
+      let yPosition = 180;
       
-      if (yPosition > 270) {
-        doc.addPage();
-        yPosition = 20;
+      doc.setFontSize(16);
+      doc.setTextColor(0, 123, 255);
+      doc.text('Recent Exercise Sessions', 20, yPosition);
+      
+      yPosition += 15;
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
+      
+      if (sessions.length === 0) {
+        doc.text('No exercise sessions found.', 25, yPosition);
+        return;
       }
-    });
+      
+      sessions.slice(0, 10).forEach((session, index) => {
+        try {
+          const sessionDate = new Date(session.date).toLocaleDateString();
+          const exerciseType = session.exerciseType || 'Unknown';
+          const duration = session.duration || 'Unknown';
+          const accuracy = session.accuracy || 0;
+          
+          doc.text(`${index + 1}. ${sessionDate} - ${exerciseType}`, 25, yPosition);
+          yPosition += 6;
+          doc.text(`   Duration: ${duration}, Accuracy: ${accuracy}%`, 30, yPosition);
+          yPosition += 10;
+          
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        } catch (sessionError) {
+          console.error('Error adding session:', sessionError);
+          yPosition += 10; // Skip this session
+        }
+      });
+    } catch (error) {
+      console.error('Error adding sessions section:', error);
+    }
   }
 
   addAnnotationsSection(doc, annotations) {
-    doc.addPage();
-    let yPosition = 20;
-    
-    doc.setFontSize(16);
-    doc.setTextColor(0, 123, 255);
-    doc.text('Medical Annotations', 20, yPosition);
-    
-    yPosition += 15;
-    doc.setFontSize(10);
-    doc.setTextColor(40, 40, 40);
-    
-    if (annotations.length === 0) {
-      doc.text('No medical annotations found.', 25, yPosition);
-      return;
-    }
-    
-    annotations.slice(0, 5).forEach((annotation, index) => {
-      doc.text(`${index + 1}. [${annotation.type.toUpperCase()}] ${annotation.text}`, 25, yPosition);
-      yPosition += 6;
-      doc.text(`   Date: ${new Date(annotation.timestamp).toLocaleDateString()}`, 30, yPosition);
-      yPosition += 10;
+    try {
+      doc.addPage();
+      let yPosition = 20;
       
-      if (yPosition > 270) {
-        doc.addPage();
-        yPosition = 20;
+      doc.setFontSize(16);
+      doc.setTextColor(0, 123, 255);
+      doc.text('Medical Annotations', 20, yPosition);
+      
+      yPosition += 15;
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
+      
+      if (annotations.length === 0) {
+        doc.text('No medical annotations found.', 25, yPosition);
+        return;
       }
-    });
+      
+      annotations.slice(0, 5).forEach((annotation, index) => {
+        try {
+          const text = annotation.text || 'No text';
+          const type = annotation.type || 'note';
+          const timestamp = annotation.timestamp ? new Date(annotation.timestamp).toLocaleDateString() : 'Unknown date';
+          
+          doc.text(`${index + 1}. [${type.toUpperCase()}] ${text}`, 25, yPosition);
+          yPosition += 6;
+          doc.text(`   Date: ${timestamp}`, 30, yPosition);
+          yPosition += 10;
+          
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        } catch (annotationError) {
+          console.error('Error adding annotation:', annotationError);
+          yPosition += 10; // Skip this annotation
+        }
+      });
+    } catch (error) {
+      console.error('Error adding annotations section:', error);
+    }
   }
 
   addRecommendations(doc, sessions) {
-    let yPosition = doc.internal.pageSize.height - 80;
-    
-    doc.setFontSize(16);
-    doc.setTextColor(0, 123, 255);
-    doc.text('Recommendations', 20, yPosition);
-    
-    yPosition += 15;
-    doc.setFontSize(11);
-    doc.setTextColor(40, 40, 40);
-    
-    const recommendations = this.generateRecommendations(sessions);
-    
-    recommendations.forEach(rec => {
-      doc.text(`• ${rec}`, 25, yPosition);
-      yPosition += 10;
-    });
+    try {
+      // Vérifier s'il y a assez d'espace, sinon ajouter une nouvelle page
+      if (doc.internal.pageSize.height - doc.lastAutoTable?.finalY < 100) {
+        doc.addPage();
+      }
+      
+      let yPosition = doc.lastAutoTable?.finalY + 20 || doc.internal.pageSize.height - 80;
+      
+      doc.setFontSize(16);
+      doc.setTextColor(0, 123, 255);
+      doc.text('Recommendations', 20, yPosition);
+      
+      yPosition += 15;
+      doc.setFontSize(11);
+      doc.setTextColor(40, 40, 40);
+      
+      const recommendations = this.generateRecommendations(sessions);
+      
+      recommendations.forEach(rec => {
+        doc.text(`• ${rec}`, 25, yPosition);
+        yPosition += 10;
+      });
+    } catch (error) {
+      console.error('Error adding recommendations:', error);
+    }
   }
 
   generateRecommendations(sessions) {
     const recommendations = [];
     
-    if (sessions.length === 0) {
-      recommendations.push('Start regular exercise sessions to track progress');
-      return recommendations;
+    try {
+      if (sessions.length === 0) {
+        recommendations.push('Start regular exercise sessions to track progress');
+        return recommendations;
+      }
+      
+      const avgAccuracy = sessions.reduce((acc, s) => acc + (s.accuracy || 0), 0) / sessions.length;
+      
+      if (avgAccuracy < 60) {
+        recommendations.push('Focus on movement accuracy - consider slower, more controlled exercises');
+      } else if (avgAccuracy > 85) {
+        recommendations.push('Excellent progress! Consider increasing exercise difficulty');
+      }
+      
+      const recentSessions = sessions.slice(0, 7);
+      if (recentSessions.length < 3) {
+        recommendations.push('Increase exercise frequency for better results');
+      }
+      
+      recommendations.push('Continue regular monitoring and track improvements');
+      recommendations.push('Consult with medical staff for personalized adjustments');
+    } catch (error) {
+      console.error('Error generating recommendations:', error);
+      recommendations.push('Unable to generate specific recommendations at this time');
     }
-    
-    const avgAccuracy = sessions.reduce((acc, s) => acc + (s.accuracy || 0), 0) / sessions.length;
-    
-    if (avgAccuracy < 60) {
-      recommendations.push('Focus on movement accuracy - consider slower, more controlled exercises');
-    } else if (avgAccuracy > 85) {
-      recommendations.push('Excellent progress! Consider increasing exercise difficulty');
-    }
-    
-    const recentSessions = sessions.slice(0, 7);
-    if (recentSessions.length < 3) {
-      recommendations.push('Increase exercise frequency for better results');
-    }
-    
-    recommendations.push('Continue regular monitoring and track improvements');
-    recommendations.push('Consult with medical staff for personalized adjustments');
     
     return recommendations;
   }
 
   calculateAge(dateOfBirth) {
-    if (!dateOfBirth) return 'N/A';
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    try {
+      if (!dateOfBirth) return 'N/A';
+      const today = new Date();
+      const birthDate = new Date(dateOfBirth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age + ' years';
+    } catch (error) {
+      console.error('Error calculating age:', error);
+      return 'N/A';
     }
-    return age + ' years';
   }
 
   getPatient(patientId) {
-    const patients = JSON.parse(localStorage.getItem('nordic-thingy-patients') || '[]');
-    return patients.find(p => p.id === patientId);
+    try {
+      const patients = JSON.parse(localStorage.getItem('nordic-thingy-patients') || '[]');
+      return patients.find(p => p.id === patientId);
+    } catch (error) {
+      console.error('Error getting patient:', error);
+      return null;
+    }
   }
 
   getPatientSessions(patientId, days = 30) {
-    const realSessions = JSON.parse(localStorage.getItem('exercise-sessions') || '[]');
-    const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    
-    const patientSessions = realSessions
-      .filter(s => s.patientId === patientId && new Date(s.date) > cutoffDate)
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    if (patientSessions.length === 0) {
-      const simulatedSessions = [
-        {
-          id: `sim-${patientId}-1`,
-          patientId: patientId,
-          exerciseType: 'neck-extension',
-          date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          duration: '2:00',
-          accuracy: Math.floor(Math.random() * 40) + 60,
-          movementCount: Math.floor(Math.random() * 30) + 20,
-          correctCount: Math.floor(Math.random() * 25) + 15,
-          incorrectCount: Math.floor(Math.random() * 10) + 2
-        },
-        {
-          id: `sim-${patientId}-2`,
-          patientId: patientId,
-          exerciseType: 'head-rotation',
-          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          duration: '2:00',
-          accuracy: Math.floor(Math.random() * 40) + 50,
-          movementCount: Math.floor(Math.random() * 25) + 18,
-          correctCount: Math.floor(Math.random() * 20) + 12,
-          incorrectCount: Math.floor(Math.random() * 8) + 3
-        },
-        {
-          id: `sim-${patientId}-3`,
-          patientId: patientId,
-          exerciseType: 'neck-extension',
-          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          duration: '2:00',
-          accuracy: Math.floor(Math.random() * 35) + 55,
-          movementCount: Math.floor(Math.random() * 28) + 22,
-          correctCount: Math.floor(Math.random() * 22) + 18,
-          incorrectCount: Math.floor(Math.random() * 6) + 1
-        }
-      ];
+    try {
+      const realSessions = JSON.parse(localStorage.getItem('exercise-sessions') || '[]');
+      const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
       
-      return simulatedSessions.filter(s => new Date(s.date) > cutoffDate);
+      const patientSessions = realSessions
+        .filter(s => s.patientId === patientId && new Date(s.date) > cutoffDate)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // Si pas de vraies sessions, simuler quelques données
+      if (patientSessions.length === 0) {
+        const simulatedSessions = [
+          {
+            id: `sim-${patientId}-1`,
+            patientId: patientId,
+            exerciseType: 'neck-extension',
+            date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+            duration: '2:00',
+            accuracy: Math.floor(Math.random() * 40) + 60,
+            movementCount: Math.floor(Math.random() * 30) + 20,
+            correctCount: Math.floor(Math.random() * 25) + 15,
+            incorrectCount: Math.floor(Math.random() * 10) + 2
+          },
+          {
+            id: `sim-${patientId}-2`,
+            patientId: patientId,
+            exerciseType: 'head-rotation',
+            date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+            duration: '2:00',
+            accuracy: Math.floor(Math.random() * 40) + 50,
+            movementCount: Math.floor(Math.random() * 25) + 18,
+            correctCount: Math.floor(Math.random() * 20) + 12,
+            incorrectCount: Math.floor(Math.random() * 8) + 3
+          }
+        ];
+        
+        return simulatedSessions.filter(s => new Date(s.date) > cutoffDate);
+      }
+      
+      return patientSessions;
+    } catch (error) {
+      console.error('Error getting patient sessions:', error);
+      return [];
     }
-    
-    return patientSessions;
   }
 
   getPatientAnnotations(patientId) {
-    const annotations = JSON.parse(localStorage.getItem('exercise-annotations') || '[]');
-    return annotations
-      .filter(a => a.patientId === patientId)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    try {
+      const annotations = JSON.parse(localStorage.getItem('exercise-annotations') || '[]');
+      return annotations
+        .filter(a => a.patientId === patientId)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    } catch (error) {
+      console.error('Error getting patient annotations:', error);
+      return [];
+    }
   }
 }
 
@@ -1510,7 +1619,12 @@ class PatientsManager {
         <div class="${patient.photo ? 'patient-header-with-photo' : 'patient-header'}">
           ${photoHtml}
           <div class="patient-name-section">
-            <h3 class="patient-name">${patient.firstName} ${patient.lastName}</h3>
+            <div class="patient-name-with-edit">
+              <h3 class="patient-name">${patient.firstName} ${patient.lastName}</h3>
+              <button class="btn-edit-inline" onclick="patientsManager.editPatient('${patient.id}')" title="Edit patient">
+                ✏️
+              </button>
+            </div>
             <span class="patient-id">${patient.id}</span>
           </div>
         </div>
@@ -1543,9 +1657,6 @@ class PatientsManager {
         <div class="patient-actions">
           <button class="btn-patient-action btn-exercise" onclick="patientsManager.viewExercises('${patient.id}')">
             🏃 Exercises
-          </button>
-          <button class="btn-patient-action btn-edit" onclick="patientsManager.editPatient('${patient.id}')">
-            ✏️ Edit
           </button>
           <button class="btn-patient-action btn-report" onclick="patientsManager.generateReport('${patient.id}')" data-patient-id="${patient.id}">
             📄 PDF Report
@@ -1635,17 +1746,6 @@ class PatientsManager {
           movementCount: Math.floor(Math.random() * 25) + 18,
           correctCount: Math.floor(Math.random() * 20) + 12,
           incorrectCount: Math.floor(Math.random() * 8) + 3
-        },
-        {
-          id: `sim-${patientId}-3`,
-          patientId: patientId,
-          exerciseType: 'neck-extension',
-          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          duration: '2:00',
-          accuracy: Math.floor(Math.random() * 35) + 55,
-          movementCount: Math.floor(Math.random() * 28) + 22,
-          correctCount: Math.floor(Math.random() * 22) + 18,
-          incorrectCount: Math.floor(Math.random() * 6) + 1
         }
       ];
       
@@ -1661,50 +1761,380 @@ class PatientsManager {
 
   async generateReport(patientId) {
     try {
-      const reportGenerator = new ReportGenerator();
+      console.log('🔄 Starting HTML-to-PDF generation');
+      
       const patient = this.patients.find(p => p.id === patientId);
-      
       if (!patient) {
-        alert('Patient not found');
+        alert('❌ Patient not found');
         return;
       }
 
+      // Trouver le bouton et afficher le loading
       const loadingBtn = document.querySelector(`[data-patient-id="${patientId}"].btn-report`);
-      if (!loadingBtn) {
-        console.error('Button not found for patient:', patientId);
-        return;
+      if (loadingBtn) {
+        const originalText = loadingBtn.textContent;
+        loadingBtn.textContent = '📄 Generating...';
+        loadingBtn.disabled = true;
+        
+        // Restaurer le bouton après un délai
+        setTimeout(() => {
+          loadingBtn.textContent = originalText;
+          loadingBtn.disabled = false;
+        }, 2000);
       }
 
-      const originalText = loadingBtn.textContent;
-      loadingBtn.textContent = '📄 Generating...';
-      loadingBtn.disabled = true;
-
-      const pdfBlob = await reportGenerator.generatePatientReport(patientId, 30);
+      // Générer le contenu HTML du rapport
+      const reportHTML = this.generateReportHTML(patient, patientId);
       
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${patient.firstName}_${patient.lastName}_Report_${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      // Créer une nouvelle fenêtre pour afficher et imprimer le rapport
+      const reportWindow = window.open('', '_blank', 'width=800,height=600');
+      reportWindow.document.write(reportHTML);
+      reportWindow.document.close();
       
-      console.log('📄 PDF Report generated and downloaded');
+      // Attendre que le contenu se charge puis ouvrir la boîte d'impression
+      setTimeout(() => {
+        reportWindow.print();
+        
+        // Optionnel : fermer la fenêtre après impression
+        reportWindow.addEventListener('afterprint', () => {
+          reportWindow.close();
+        });
+      }, 500);
       
-      loadingBtn.textContent = originalText;
-      loadingBtn.disabled = false;
+      console.log('✅ HTML report generated and print dialog opened');
+      alert('✅ Report generated! Print dialog should be open.\nYou can save as PDF from the print dialog.');
       
     } catch (error) {
       console.error('❌ Report generation failed:', error);
-      alert('Failed to generate report. Please try again.');
-      
-      const loadingBtn = document.querySelector(`[data-patient-id="${patientId}"].btn-report`);
-      if (loadingBtn) {
-        loadingBtn.textContent = '📄 PDF Report';
-        loadingBtn.disabled = false;
-      }
+      alert(`❌ Report generation failed: ${error.message}`);
     }
+  }
+
+  // Ajouter cette nouvelle méthode pour générer le HTML du rapport
+  generateReportHTML(patient, patientId) {
+    const sessions = this.getPatientSessions(patientId, 30);
+    const age = this.calculateAge(patient.dateOfBirth);
+    const totalSessions = sessions.length;
+    const avgAccuracy = sessions.length > 0 ? 
+      Math.round(sessions.reduce((acc, s) => acc + (s.accuracy || 0), 0) / sessions.length) : 0;
+    
+    const reportDate = new Date().toLocaleDateString();
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Patient Report - ${patient.firstName} ${patient.lastName}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: white;
+            color: #333;
+            line-height: 1.6;
+          }
+          
+          .report-header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          
+          .report-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 0;
+          }
+          
+          .report-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin: 10px 0 0 0;
+          }
+          
+          .patient-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+          }
+          
+          .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 30px 0 15px 0;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 5px;
+          }
+          
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+          }
+          
+          .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+          }
+          
+          .info-label {
+            font-weight: bold;
+            color: #495057;
+          }
+          
+          .info-value {
+            color: #212529;
+          }
+          
+          .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+          }
+          
+          .stat-card {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+          }
+          
+          .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+          }
+          
+          .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+          }
+          
+          .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+          }
+          
+          .sessions-table th,
+          .sessions-table td {
+            border: 1px solid #dee2e6;
+            padding: 12px 8px;
+            text-align: left;
+          }
+          
+          .sessions-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+          }
+          
+          .accuracy-excellent {
+            color: #28a745;
+            font-weight: bold;
+          }
+          
+          .accuracy-good {
+            color: #ffc107;
+            font-weight: bold;
+          }
+          
+          .accuracy-poor {
+            color: #dc3545;
+            font-weight: bold;
+          }
+          
+          .recommendations {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 30px 0;
+          }
+          
+          .recommendations ul {
+            margin: 10px 0;
+            padding-left: 20px;
+          }
+          
+          .recommendations li {
+            margin: 8px 0;
+          }
+          
+          .report-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+          }
+          
+          @media print {
+            body {
+              margin: 0;
+              padding: 15px;
+            }
+            
+            .report-header {
+              margin-bottom: 20px;
+            }
+            
+            .section-title {
+              margin: 20px 0 10px 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="report-header">
+          <h1 class="report-title">🏥 Nordic Thingy - Patient Report</h1>
+          <p class="report-subtitle">Generated on ${reportDate}</p>
+        </div>
+        
+        <div class="patient-info">
+          <h2 class="section-title">👤 Patient Information</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Name:</span>
+              <span class="info-value">${patient.firstName} ${patient.lastName}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Patient ID:</span>
+              <span class="info-value">${patient.id}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Age:</span>
+              <span class="info-value">${age}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Gender:</span>
+              <span class="info-value">${patient.gender || 'Not specified'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Email:</span>
+              <span class="info-value">${patient.email || 'Not specified'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Phone:</span>
+              <span class="info-value">${patient.phone || 'Not specified'}</span>
+            </div>
+          </div>
+          ${patient.notes ? `
+            <div class="info-item">
+              <span class="info-label">Notes:</span>
+              <span class="info-value">${patient.notes}</span>
+            </div>
+          ` : ''}
+        </div>
+        
+        <h2 class="section-title">📊 Exercise Statistics</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">${totalSessions}</div>
+            <div class="stat-label">Total Sessions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${avgAccuracy}%</div>
+            <div class="stat-label">Average Accuracy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${sessions[0] ? new Date(sessions[0].date).toLocaleDateString() : 'N/A'}</div>
+            <div class="stat-label">Last Session</div>
+          </div>
+        </div>
+        
+        <h2 class="section-title">🏃 Recent Exercise Sessions</h2>
+        ${sessions.length === 0 ? '<p>No exercise sessions found.</p>' : `
+          <table class="sessions-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Exercise Type</th>
+                <th>Duration</th>
+                <th>Accuracy</th>
+                <th>Movements</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sessions.slice(0, 10).map(session => {
+                const accuracyClass = session.accuracy >= 80 ? 'accuracy-excellent' : 
+                                     session.accuracy >= 60 ? 'accuracy-good' : 'accuracy-poor';
+                return `
+                  <tr>
+                    <td>${new Date(session.date).toLocaleDateString()}</td>
+                    <td>${session.exerciseType.replace('-', ' ').toUpperCase()}</td>
+                    <td>${session.duration || '2:00'}</td>
+                    <td class="${accuracyClass}">${session.accuracy}%</td>
+                    <td>${session.correctCount || 0}/${session.movementCount || 0}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `}
+        
+        <div class="recommendations">
+          <h2 class="section-title">💡 Recommendations</h2>
+          <ul>
+            ${this.generateTextRecommendations(sessions).map(rec => `<li>${rec}</li>`).join('')}
+          </ul>
+        </div>
+        
+        <div class="report-footer">
+          <p>Report generated by Nordic Thingy Patient Management System</p>
+          <p>For medical use only - Consult with healthcare professionals for treatment decisions</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  // Ajouter cette méthode pour générer les recommandations textuelles
+  generateTextRecommendations(sessions) {
+    const recommendations = [];
+    
+    if (sessions.length === 0) {
+      recommendations.push('Start regular exercise sessions to track progress and establish baseline measurements');
+      recommendations.push('Schedule initial assessment with physical therapist');
+      return recommendations;
+    }
+    
+    const avgAccuracy = sessions.reduce((acc, s) => acc + (s.accuracy || 0), 0) / sessions.length;
+    
+    if (avgAccuracy < 60) {
+      recommendations.push('Focus on movement accuracy - consider slower, more controlled exercises');
+      recommendations.push('Review exercise technique with supervised training sessions');
+    } else if (avgAccuracy > 85) {
+      recommendations.push('Excellent progress! Consider increasing exercise difficulty or duration');
+      recommendations.push('Explore advanced movement patterns to maintain engagement');
+    } else {
+      recommendations.push('Good progress maintained - continue current exercise routine');
+    }
+    
+    const recentSessions = sessions.slice(0, 7);
+    if (recentSessions.length < 3) {
+      recommendations.push('Increase exercise frequency for better results - aim for 3-4 sessions per week');
+    } else if (recentSessions.length >= 5) {
+      recommendations.push('Excellent session frequency - maintain this consistent routine');
+    }
+    
+    recommendations.push('Continue regular monitoring and track improvements over time');
+    recommendations.push('Consult with medical staff for personalized exercise adjustments');
+    recommendations.push('Consider incorporating variety in exercise types to prevent adaptation plateau');
+    
+    return recommendations;
   }
 }
 

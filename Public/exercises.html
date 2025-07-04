@@ -8,6 +8,48 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* Supprimer les barres de défilement pour toute la page */
+    body {
+      overflow: hidden; /* Supprime le scroll vertical et horizontal */
+    }
+
+    /* Supprimer les barres de défilement pour le conteneur principal */
+    .exercises-container {
+      overflow: hidden; /* Empêche le débordement */
+    }
+
+    /* Supprimer les barres de défilement pour le contenu des exercices */
+    .exercises-content {
+      overflow: hidden; /* Pas de scroll dans le contenu */
+    }
+
+    /* Supprimer les barres de défilement pour la grille d'exercices */
+    .exercises-grid {
+      overflow: hidden; /* Pas de scroll dans la grille */
+    }
+
+    /* Supprimer les barres de défilement personnalisées WebKit */
+    *::-webkit-scrollbar {
+      display: none; /* Cache complètement les barres de défilement */
+    }
+
+    /* Supprimer les barres de défilement pour Firefox */
+    * {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE et Edge */
+    }
+
+    /* Alternative : rendre les barres de défilement invisibles mais fonctionnelles */
+    html {
+      overflow: hidden; /* Supprime le scroll au niveau HTML */
+    }
+
+    /* Ajustements pour éviter le débordement de contenu */
+    .exercise-description {
+      overflow: hidden; /* Empêche le débordement du texte */
+      text-overflow: ellipsis; /* Ajoute des points de suspension si nécessaire */
+    }
+
     .exercises-container {
       height: calc(100vh - 140px);
       display: flex;
