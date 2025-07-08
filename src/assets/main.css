@@ -1,0 +1,9 @@
+@import './base.css';
+
+/* Styles globaux supprimés pour éviter les conflits */
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
