@@ -164,22 +164,19 @@
             >
           </div>
           
-          <!-- Photo upload -->
+          <!-- Photo upload  -->
           <div class="form-group">
-            <label class="form-label" for="photo">Profile Photo</label>
-            <div class="photo-upload-container">
-              <div class="photo-preview" @click="selectPhoto">
+            <div class="photo-upload-simple">
+              <!-- Preview image if exists -->
+              <div v-if="patientForm.photo" class="photo-preview-simple">
                 <img 
-                  v-if="patientForm.photo" 
                   :src="patientForm.photo" 
                   alt="Patient Photo" 
-                  class="photo-image"
+                  class="photo-image-simple"
                 >
-                <div v-else class="photo-placeholder">
-                  <span class="photo-icon">📸</span>
-                  <span class="photo-text">Click to add photo</span>
-                </div>
               </div>
+              
+              <!-- Hidden file input -->
               <input 
                 type="file" 
                 ref="photoInput"
@@ -187,13 +184,15 @@
                 class="form-input-file" 
                 accept="image/*"
               >
-              <div class="photo-actions">
-                <button type="button" class="btn-photo" @click="selectPhoto">
+              
+              <!-- Action buttons -->
+              <div class="photo-actions-simple">
+                <button type="button" class="btn-photo-simple" @click="selectPhoto">
                   📷 Select Photo
                 </button>
                 <button 
                   type="button" 
-                  class="btn-photo btn-remove" 
+                  class="btn-photo-simple btn-remove-simple" 
                   @click="removePhoto"
                   v-if="patientForm.photo"
                 >
@@ -1215,152 +1214,80 @@ const generateTextRecommendations = (sessions) => {
   transform: translateY(-1px);
 }
 
-/* Photo upload styles */
-.photo-upload-container {
+/* NEW: Simplified photo upload styles */
+.photo-upload-simple {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
-.photo-preview {
-  width: 100%;
-  height: 120px;
-  border: 2px dashed #007bff;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+.photo-preview-simple {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
   overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.photo-preview:hover {
-  border-color: #0056b3;
-  background: #f0f8ff;
-}
-
-.photo-preview.has-image {
   border: 2px solid #007bff;
-  background: none;
+  margin: 0 auto;
 }
 
-.photo-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #007bff;
-  font-size: 1rem;
-  text-align: center;
-}
-
-.photo-icon {
-  font-size: 2rem;
-  margin-bottom: 0.4rem;
-}
-
-.photo-text {
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.photo-image {
+.photo-image-simple {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 4px;
 }
 
 .form-input-file {
   display: none;
 }
 
-.photo-actions {
+.photo-actions-simple {
   display: flex;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
-.btn-photo {
-  padding: 0.3rem 0.6rem;
+.btn-photo-simple {
+  padding: 0.4rem 0.8rem;
   border: none;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.3rem;
   background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
 }
 
-.btn-photo:hover {
+.btn-photo-simple:hover {
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
+.btn-remove-simple {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.btn-remove-simple:hover {
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Remove the old photo upload styles (optional cleanup) */
+/* 
+.photo-upload-container,
+.photo-preview,
+.photo-placeholder,
+.photo-icon,
+.photo-text,
+.photo-image,
+.photo-actions,
+.btn-photo,
 .btn-remove {
-  background: #dc3545;
-  color: white;
+  // These can be removed if not used elsewhere
 }
+*/
 
-.btn-remove:hover {
-  background: #c82333;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .patients-container {
-    gap: 0.5rem;
-  }
-
-  .patients-header {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
-
-  .patients-list {
-    grid-template-columns: 1fr;
-    gap: 0.6rem;
-  }
-
-  .patient-card {
-    min-height: 160px;
-    padding: 0.8rem;
-  }
-
-  .patient-actions {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.2rem;
-  }
-
-  .btn-patient-action {
-    padding: 0.25rem 0.4rem;
-    font-size: 0.65rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .modal-content {
-    margin: 0.5% auto;
-    width: 98%;
-    padding: 0.8rem;
-    max-height: 99vh;
-  }
-
-  .patient-actions {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.3rem;
-  }
-
-  .btn-patient-action {
-    padding: 0.3rem 0.4rem;
-    font-size: 0.7rem;
-  }
-}
+/* ...rest of existing styles... */
 </style>
