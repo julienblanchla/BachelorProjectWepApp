@@ -217,11 +217,11 @@ const defaultExerciseConfigs = {
     fallback: '🟢',
     duration: 120
   },
-  'lateral-flexion': {
-    name: 'Lateral Flexion',
+  'unilateral-arm-flexion': {
+    name: 'Unilateral Arm Flexion',
     icon: null,
     fallback: '🟡',
-    duration: 120
+    duration: 120 
   }
 }
 
@@ -243,6 +243,7 @@ const exerciseConfig = computed(() => {
     duration: 120
   }
   
+  // Load exercise icons
   if (exerciseType.value === 'neck-extension') {
     try {
       config.icon = new URL('../assets/NeckExtension.png', import.meta.url).href
@@ -254,6 +255,13 @@ const exerciseConfig = computed(() => {
       config.icon = new URL('../assets/HeadRotation.PNG', import.meta.url).href
     } catch (e) {
       console.warn('HeadRotation image not found')
+    }
+  } else if (exerciseType.value === 'unilateral-arm-flexion') {
+    // NEW: Add icon loading for Unilateral Arm Flexion
+    try {
+      config.icon = new URL('../assets/UnilateralArmFlexion.png', import.meta.url).href
+    } catch (e) {
+      console.warn('UnilateralArmFlexion image not found')
     }
   }
   
@@ -398,10 +406,11 @@ const startRecording = async () => {
   try {
     console.log('🎬 Starting exercise recording session...')
     
+    // Exercise name mapping
     const exerciseNames = {
       'neck-extension': 'NeckExtension',
       'head-rotation': 'HeadRotation',
-      'lateral-flexion': 'LateralFlexion'
+      'unilateral-arm-flexion': 'UnilateralArmFlexion' // NEW: Add mapping
     }
     
     const patientName = patient.value ? 

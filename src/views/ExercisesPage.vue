@@ -61,6 +61,7 @@
         <!-- Exercises always displayed -->
         <div class="exercises-grid">
           <!-- Default exercises - always visible -->
+          <!-- Neck Extension Exercise -->
           <div class="exercise-card neck-extension">
             <div class="exercise-header">
               <div class="exercise-icon">
@@ -93,6 +94,7 @@
             </div>
           </div>
 
+          <!-- Head Rotation Exercise -->
           <div class="exercise-card head-rotation">
             <div class="exercise-header">
               <div class="exercise-icon">
@@ -118,6 +120,39 @@
               <button 
                 class="btn-exercise btn-start-exercise" 
                 @click="startExercise('head-rotation')"
+                :disabled="!patientId"
+              >
+                {{ patientId ? '▶️ Start Exercise' : '👥 Select Patient First' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Unilateral Arm Flexion Exercise - Updated duration -->
+          <div class="exercise-card unilateral-arm-flexion">
+            <div class="exercise-header">
+              <div class="exercise-icon">
+                <img 
+                  :src="getUnilateralArmFlexionImage()" 
+                  alt="Unilateral Arm Flexion" 
+                  @error="onImageError"
+                  class="exercise-image"
+                >
+                <span class="fallback-icon">🟡</span>
+              </div>
+              <div class="exercise-info">
+                <h3>Unilateral Arm Flexion</h3>
+                <span class="exercise-duration">⏱️ 2 minutes</span>
+              </div>
+            </div>
+            
+            <div class="exercise-description">
+              Strengthen arm and shoulder muscles through controlled unilateral flexion movements. This exercise focuses on improving upper limb mobility, coordination, and muscle strength with precise motion tracking and real-time feedback.
+            </div>
+            
+            <div class="exercise-actions">
+              <button 
+                class="btn-exercise btn-start-exercise" 
+                @click="startExercise('unilateral-arm-flexion')"
                 :disabled="!patientId"
               >
                 {{ patientId ? '▶️ Start Exercise' : '👥 Select Patient First' }}
@@ -443,6 +478,15 @@ const getNeckExtensionImage = () => {
 const getHeadRotationImage = () => {
   try {
     return new URL('../assets/HeadRotation.PNG', import.meta.url).href
+  } catch {
+    return ''
+  }
+}
+
+// NEW: Add image helper for Unilateral Arm Flexion
+const getUnilateralArmFlexionImage = () => {
+  try {
+    return new URL('../assets/UnilateralArmFlexion.png', import.meta.url).href
   } catch {
     return ''
   }
@@ -807,6 +851,10 @@ onMounted(() => {
 
 .exercise-card.global-exercise {
   border-left-color: #f59e0b;
+}
+
+.exercise-card.unilateral-arm-flexion {
+  border-left-color: #f59e0b; /* Orange/yellow border */
 }
 
 .exercise-header {
