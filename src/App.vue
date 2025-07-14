@@ -1,6 +1,11 @@
 <script setup>
-import { ref, onMounted, onUnmounted, provide } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted, provide, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from './composables/useAuth.js'
+
+const route = useRoute()
+const router = useRouter()
+const { currentUser, isAuthenticated, userDisplayName, userInitials, initAuth, logout } = useAuth()
 
 // Reactive data
 const nordicData = ref(null)
@@ -42,14 +47,15 @@ const valueUpdated = ref({
 })
 
 // Provide data to child components
-const route = useRoute()
-
 provide('nordicData', nordicData)
 provide('mbientData', mbientData)
 provide('chartData', chartData)
 provide('mbientChartData', mbientChartData)
 provide('maxPoints', maxPoints)
 provide('valueUpdated', valueUpdated)
+
+// Check if current route is login page
+const isLoginPage = computed(() => route.name === 'Login')
 
 // Nordic data fetching function
 const fetchNordicData = async () => {
@@ -104,7 +110,7 @@ const addDataPoint = (accelerometer, timestamp) => {
   chartData.value.yData.push(accelerometer.y)
   chartData.value.zData.push(accelerometer.z)
   
-  // Keep only the last points
+  // Keep only last N points
   if (chartData.value.labels.length > maxPoints) {
     chartData.value.labels.shift()
     chartData.value.xData.shift()
@@ -122,7 +128,7 @@ const addMbientDataPoint = (accelerometer, timestamp) => {
   mbientChartData.value.yData.push(accelerometer.y)
   mbientChartData.value.zData.push(accelerometer.z)
   
-  // Keep only the last points
+  // Keep only last N points
   if (mbientChartData.value.labels.length > maxPoints) {
     mbientChartData.value.labels.shift()
     mbientChartData.value.xData.shift()
@@ -131,7 +137,7 @@ const addMbientDataPoint = (accelerometer, timestamp) => {
   }
 }
 
-// Function to trigger value animation
+// Function to trigger value animations
 const triggerValueAnimation = (valueType) => {
   valueUpdated.value[valueType] = true
   setTimeout(() => {
@@ -159,20 +165,46 @@ const watchForChanges = () => {
 
 // Main data refresh cycle
 const updateData = async () => {
-  await Promise.all([
-    fetchNordicData(),
-    fetchMbientData()
-  ])
-  
-  watchForChanges()
+  // Only fetch data if user is authenticated and not on login page
+  if (isAuthenticated.value && !isLoginPage.value) {
+    await Promise.all([
+      fetchNordicData(),
+      fetchMbientData()
+    ])
+    
+    watchForChanges()
+  }
   isLoading.value = false
 }
 
+// Handle logout
+const handleLogout = () => {
+  // Stop data fetching
+  if (intervalId) {
+    clearInterval(intervalId)
+    intervalId = null
+  }
+  
+  // Logout user with router
+  logout(router)
+}
+
 // Automatic startup
-onMounted(() => {
-  console.log('🚀 Application started - Starting data fetch cycle')
-  updateData() // First immediate call
-  intervalId = setInterval(updateData, 3000) // Then every 3 seconds
+onMounted(async () => {
+  console.log('🚀 Application started')
+  
+  // Initialize authentication
+  const isLoggedIn = initAuth()
+  
+  if (isLoggedIn && !isLoginPage.value) {
+    console.log('🚀 Starting data fetch cycle for authenticated user')
+    updateData() // First immediate call
+    intervalId = setInterval(updateData, 3000) // Then every 3 seconds
+  } else if (!isLoggedIn && !isLoginPage.value) {
+    // Redirect to login if not authenticated
+    console.log('🔒 No session found, redirecting to login')
+    router.push('/login')
+  }
 })
 
 // Cleanup
@@ -182,38 +214,83 @@ onUnmounted(() => {
     console.log('🛑 Data fetch cycle stopped')
   }
 })
+
+// Watch route changes to handle authentication
+const handleRouteChange = () => {
+  if (isAuthenticated.value && !isLoginPage.value && !intervalId) {
+    // Start data fetching for authenticated users
+    console.log('🚀 Starting data fetch cycle after route change')
+    updateData()
+    intervalId = setInterval(updateData, 3000)
+  } else if (isLoginPage.value && intervalId) {
+    // Stop data fetching on login page
+    clearInterval(intervalId)
+    intervalId = null
+  }
+}
+
+// Watch for route changes
+router.afterEach(() => {
+  handleRouteChange()
+})
 </script>
 
 <template>
-  <div class="dashboard">
-    <h1>🔬 Nordic Thingy Dashboard - Professional Sensor Monitoring</h1>
-    
-    <!-- Navigation Menu -->
-    <div class="navigation">
-      <router-link to="/" class="nav-btn" :class="{ active: route.name === 'Dashboard' }">
-        🏠 Dashboard
-      </router-link>
-      <router-link to="/charts" class="nav-btn" :class="{ active: route.name === 'Charts' }">
-        📈 Charts
-      </router-link>
-      <router-link to="/sensors" class="nav-btn" :class="{ active: route.name === 'Sensors' }">
-        🌡️ Sensors
-      </router-link>
-      <router-link to="/motion" class="nav-btn" :class="{ active: route.name === 'Motion' }">
-        🏃 Motion
-      </router-link>
-      <router-link to="/patients" class="nav-btn" :class="{ active: route.name === 'Patients' }">
-        👥 Patients
-      </router-link>
-      <router-link to="/exercises" class="nav-btn" :class="{ active: route.name === 'Exercises' }">
-        🎯 Exercises
-      </router-link>
-    </div>
-    
-    <!-- Vue Router Outlet - Page content displays here -->
-    <div class="page-content">
+  <div class="app">
+    <!-- Show navigation only if not on login page -->
+    <template v-if="!isLoginPage">
+      <div class="dashboard">
+        <h1>🔬 Nordic Thingy Dashboard - Professional Sensor Monitoring</h1>
+        
+        <!-- Navigation Menu with User Info -->
+        <div class="navigation">
+          <div class="nav-links">
+            <router-link to="/" class="nav-btn" :class="{ active: route.name === 'Dashboard' }">
+              🏠 Dashboard
+            </router-link>
+            <router-link to="/charts" class="nav-btn" :class="{ active: route.name === 'Charts' }">
+              📈 Charts
+            </router-link>
+            <router-link to="/sensors" class="nav-btn" :class="{ active: route.name === 'Sensors' }">
+              🌡️ Sensors
+            </router-link>
+            <router-link to="/motion" class="nav-btn" :class="{ active: route.name === 'Motion' }">
+              🏃 Motion
+            </router-link>
+            <router-link to="/patients" class="nav-btn" :class="{ active: route.name === 'Patients' }">
+              👥 Patients
+            </router-link>
+            <router-link to="/exercises" class="nav-btn" :class="{ active: route.name === 'Exercises' }">
+              🎯 Exercises
+            </router-link>
+          </div>
+          
+          <!-- User Menu -->
+          <div class="user-menu" v-if="isAuthenticated">
+            <div class="user-info">
+              <div class="user-avatar">{{ userInitials }}</div>
+              <div class="user-details">
+                <div class="user-name">{{ userDisplayName }}</div>
+                <div class="user-role">{{ currentUser?.role }}</div>
+              </div>
+            </div>
+            <button @click="handleLogout" class="logout-btn">
+              🚪 Logout
+            </button>
+          </div>
+        </div>
+        
+        <!-- Vue Router Outlet - Page content displays here -->
+        <div class="page-content">
+          <router-view />
+        </div>
+      </div>
+    </template>
+
+    <!-- Show login page without navigation -->
+    <template v-else>
       <router-view />
-    </div>
+    </template>
   </div>
 </template>
 
@@ -239,6 +316,11 @@ html, body {
   height: 100%;
 }
 
+.app {
+  width: 100%;
+  height: 100%;
+}
+
 :root {
   --primary-color: #3b82f6;
   --secondary-color: #10b981;
@@ -256,10 +338,10 @@ html, body {
 }
 
 .dashboard {
+  width: 100%;
+  min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--gradient);
-  min-height: 100vh;
-  width: 100%;
   color: var(--text-color);
   display: flex;
   flex-direction: column;
@@ -276,13 +358,26 @@ h1 {
   letter-spacing: -0.025em;
 }
 
+/* Navigation sur une seule ligne avec menu utilisateur à droite */
 .navigation {
   display: flex;
-  justify-content: center;
-  gap: 0.3rem;
+  justify-content: space-between; /* Espace entre nav-links et user-menu */
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
   padding: 0 1rem;
+  flex-wrap: nowrap; /* Empêche le wrap sur desktop */
+  position: relative;
+  width: 100%;
+}
+
+/* Navigation links centrées */
+.nav-links {
+  display: flex;
+  gap: 0.3rem;
   flex-wrap: wrap;
+  justify-content: center; /* Centre les liens de navigation */
+  flex: 1; /* Prend l'espace disponible */
 }
 
 .nav-btn {
@@ -314,9 +409,209 @@ h1 {
   color: var(--text-color);
 }
 
+/* User Menu - maintenant à droite de la navbar */
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0; /* Ne rétrécit pas */
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.user-role {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.logout-btn {
+  background: rgba(239, 68, 68, 0.2);
+  color: white;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
 /* Page content styles */
 .page-content {
   width: 100%;
   min-height: calc(100vh - 120px);
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .navigation {
+    flex-wrap: wrap; /* Permet le wrap sur tablettes */
+    justify-content: center;
+    gap: 0.8rem;
+  }
+  
+  .nav-links {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .user-menu {
+    order: 2;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navigation {
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: center;
+  }
+  
+  .nav-links {
+    justify-content: center;
+    width: 100%;
+    order: 1;
+  }
+  
+  .user-menu {
+    justify-content: center;
+    width: auto;
+    order: 2;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+    padding: 0.6rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .nav-btn {
+    text-align: center;
+    padding: 0.6rem 0.4rem;
+    font-size: 0.75rem;
+  }
+  
+  .user-details {
+    display: none;
+  }
+
+  .navigation {
+    padding: 0 0.5rem;
+  }
+  
+  .user-menu {
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+/* Amélioration visuelle pour le centrage sur grands écrans */
+@media (min-width: 1200px) {
+  .navigation {
+    max-width: 1200px;
+    margin: 0 auto 1rem auto;
+    padding: 0 2rem;
+  }
+  
+  .nav-links {
+    gap: 0.5rem;
+  }
+  
+  .nav-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .user-menu {
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+/* Animation pour une meilleure UX */
+.nav-links {
+  transition: all 0.3s ease;
+}
+
+.nav-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.nav-btn:hover::before {
+  left: 100%;
+}
+
+/* Focus states pour l'accessibilité */
+.nav-btn:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.logout-btn:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
 }
 </style>

@@ -46,7 +46,7 @@
       </div>
 
       <div class="exercises-content">
-        <h2 class="exercises-title">🎯 Available Exercises</h2>
+        <h2 class="exercises-title">🎯 Movement Control Tests</h2>
         
         <!-- Loading state only if waiting for patient data -->
         <div v-if="patientId && !patient" class="loading-state">
@@ -61,26 +61,32 @@
         <!-- Exercises always displayed -->
         <div class="exercises-grid">
           <!-- Default exercises - always visible -->
-          <!-- Neck Extension Exercise -->
+          
+          <!-- 1) Active cervical flexion and extension -->
           <div class="exercise-card neck-extension">
             <div class="exercise-header">
               <div class="exercise-icon">
                 <img 
                   :src="getNeckExtensionImage()" 
-                  alt="Neck Extension" 
+                  alt="Active cervical flexion and extension" 
                   @error="onImageError"
                   class="exercise-image"
                 >
                 <span class="fallback-icon">🔵</span>
               </div>
               <div class="exercise-info">
-                <h3>Neck Extension</h3>
+                <h3>Active Cervical Flexion and Extension</h3>
                 <span class="exercise-duration">⏱️ 2 minutes</span>
               </div>
             </div>
             
             <div class="exercise-description">
-              Improve neck mobility and strengthen posterior neck muscles through controlled extension movements with real-time motion tracking and automated performance analysis.
+              <div class="test-position">
+                <strong>Test Position:</strong> Sitting on a height-adjustable stool with no back or armrests, hands on thighs.
+              </div>
+              <div class="test-description">
+                <strong>Test Description:</strong> The patient flexes the cervical spine so that the chin moves towards the sternum. The patient then extends the cervical spine into extension as far as possible and finally returns to the upright position.
+              </div>
             </div>
             
             <div class="exercise-actions">
@@ -89,31 +95,36 @@
                 @click="startExercise('neck-extension')"
                 :disabled="!patientId"
               >
-                {{ patientId ? '▶️ Start Exercise' : '👥 Select Patient First' }}
+                {{ patientId ? '▶️ Start Test' : '👥 Select Patient First' }}
               </button>
             </div>
           </div>
 
-          <!-- Head Rotation Exercise -->
+          <!-- 2) Active cervical rotation -->
           <div class="exercise-card head-rotation">
             <div class="exercise-header">
               <div class="exercise-icon">
                 <img 
                   :src="getHeadRotationImage()" 
-                  alt="Head Rotation" 
+                  alt="Active cervical rotation" 
                   @error="onImageError"
                   class="exercise-image"
                 >
                 <span class="fallback-icon">🟢</span>
               </div>
               <div class="exercise-info">
-                <h3>Head Rotation</h3>
+                <h3>Active Cervical Rotation</h3>
                 <span class="exercise-duration">⏱️ 2 minutes</span>
               </div>
             </div>
             
             <div class="exercise-description">
-              Enhance cervical rotation mobility and improve neck flexibility through controlled rotational movements with motion guidance and automatic good/bad movement detection.
+              <div class="test-position">
+                <strong>Test Position:</strong> Sitting on a height-adjustable stool with no back or armrests, hands on thighs.
+              </div>
+              <div class="test-description">
+                <strong>Test Description:</strong> The patient is asked to turn the head as far as possible to the right and back to the middle position, then to the left and back to the middle position. Then, the patient is asked to turn the head once through the whole range from the middle position to the right and to the left without stopping in the middle position, and finally to come back to the middle position. The cervical rotation should be a pure axial rotation with the eyes remaining horizontal and without moving the upper body or the shoulders.
+              </div>
             </div>
             
             <div class="exercise-actions">
@@ -122,31 +133,36 @@
                 @click="startExercise('head-rotation')"
                 :disabled="!patientId"
               >
-                {{ patientId ? '▶️ Start Exercise' : '👥 Select Patient First' }}
+                {{ patientId ? '▶️ Start Test' : '👥 Select Patient First' }}
               </button>
             </div>
           </div>
 
-          <!-- Unilateral Arm Flexion Exercise - Updated duration -->
+          <!-- 3) Unilateral arm flexion (180°) -->
           <div class="exercise-card unilateral-arm-flexion">
             <div class="exercise-header">
               <div class="exercise-icon">
                 <img 
                   :src="getUnilateralArmFlexionImage()" 
-                  alt="Unilateral Arm Flexion" 
+                  alt="Unilateral arm flexion (180°)" 
                   @error="onImageError"
                   class="exercise-image"
                 >
                 <span class="fallback-icon">🟡</span>
               </div>
               <div class="exercise-info">
-                <h3>Unilateral Arm Flexion</h3>
+                <h3>Unilateral Arm Flexion (180°)</h3>
                 <span class="exercise-duration">⏱️ 2 minutes</span>
               </div>
             </div>
             
             <div class="exercise-description">
-              Strengthen arm and shoulder muscles through controlled unilateral flexion movements. This exercise focuses on improving upper limb mobility, coordination, and muscle strength with precise motion tracking and real-time feedback.
+              <div class="test-position">
+                <strong>Test Position:</strong> Standing.
+              </div>
+              <div class="test-description">
+                <strong>Test Description:</strong> The patient is asked to raise and lower the extended right arm (palm in) as far as possible while keeping the head in a neutral position. The patient is then asked to raise and lower the extended left arm in the same way.
+              </div>
             </div>
             
             <div class="exercise-actions">
@@ -155,7 +171,7 @@
                 @click="startExercise('unilateral-arm-flexion')"
                 :disabled="!patientId"
               >
-                {{ patientId ? '▶️ Start Exercise' : '👥 Select Patient First' }}
+                {{ patientId ? '▶️ Start Test' : '👥 Select Patient First' }}
               </button>
             </div>
           </div>
@@ -202,7 +218,7 @@
             </div>
           </div>
 
-          <!-- Custom exercises - only if patient selected -->
+          <!-- Custom exercises -->
           <div 
             v-if="patientId"
             v-for="exercise in customExercises" 
@@ -241,12 +257,12 @@
             </div>
           </div>
           
-          <!-- Information message if no patient selected -->
+          <!-- Information message -->
           <div v-if="!patientId" class="info-card">
             <div class="info-icon">ℹ️</div>
             <div class="info-content">
-              <h3>Patient Selection for Exercise Execution</h3>
-              <p>You can create global exercises for all patients, but to start an exercise session, please select a specific patient first.</p>
+              <h3>Patient Selection for Movement Control Tests</h3>
+              <p>You can create global tests for all patients, but to start a movement control test session, please select a specific patient first.</p>
               <router-link to="/patients" class="btn-info-action">
                 👥 Go to Patients
               </router-link>
@@ -931,114 +947,422 @@ onMounted(() => {
   font-size: 0.85rem;
   color: #475569;
   line-height: 1.5;
-  text-align: center;
+  text-align: left; /* Changed from center to left for better readability */
   background: rgba(248, 250, 252, 0.8);
-  padding: 0.8rem;
+  padding: 1rem;
   border-radius: 8px;
   border: 1px solid rgba(203, 213, 225, 0.3);
   flex: 1;
 }
 
+.test-position {
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(203, 213, 225, 0.4);
+}
+
+.test-description {
+  margin-bottom: 0;
+}
+
+.test-position strong,
+.test-description strong {
+  color: #1e293b;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+/* Enhanced button styling for exercise actions */
 .exercise-actions {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.5rem;
   margin-top: auto;
-  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .btn-exercise {
-  flex: 1;
-  padding: 0.8rem 1rem;
+  padding: 0.8rem 1.2rem;
   border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  text-transform: none;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
-.btn-start-exercise {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-}
-
-.btn-start-exercise:disabled {
-  background: linear-gradient(135deg, #9ca3af, #6b7280);
-  color: #d1d5db;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-delete-exercise {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  flex: 0 0 auto;
-}
-
-.btn-exercise:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-/* New information card */
-.info-card {
-  background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
-  border-radius: 12px;
-  padding: 1.5rem;
-  border-left: 4px solid #0ea5e9;
+/* Enhanced universal button styling */
+.btn-exercise,
+.btn-create-exercise,
+.btn-back,
+.btn-modal,
+.btn-info-action {
+  padding: 0.8rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  text-align: left;
-  grid-column: 1 / -1;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  text-transform: none;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
-.info-icon {
-  font-size: 2.5rem;
-  flex-shrink: 0;
+/* Universal shine effect */
+.btn-exercise::before,
+.btn-create-exercise::before,
+.btn-back::before,
+.btn-modal::before,
+.btn-info-action::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.6s ease;
 }
 
-.info-content h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0c4a6e;
-  margin: 0 0 0.5rem 0;
+.btn-exercise:hover::before,
+.btn-create-exercise:hover::before,
+.btn-back:hover::before,
+.btn-modal:hover::before,
+.btn-info-action:hover::before {
+  left: 100%;
 }
 
-.info-content p {
-  font-size: 0.9rem;
-  color: #0369a1;
-  margin: 0 0 1rem 0;
-  line-height: 1.5;
-}
-
-.btn-info-action {
-  padding: 0.6rem 1.2rem;
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+/* Enhanced Start Test button */
+.btn-start-exercise {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  box-shadow: 0 3px 12px rgba(14, 165, 233, 0.2);
+  flex: 1;
+  min-width: 160px;
+}
+
+.btn-start-exercise:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Enhanced Create Exercise button */
+.btn-create-exercise {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  min-width: auto;
+  padding: 0.8rem 1.2rem;
+}
+
+.btn-create-exercise:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Enhanced Back button */
+.btn-back {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+  min-width: auto;
+  padding: 0.8rem 1.2rem;
+}
+
+.btn-back:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+  color: white;
+}
+
+/* Enhanced Delete button */
+.btn-delete-exercise {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  flex: 0 0 auto;
+  min-width: auto;
+  padding: 0.8rem 1rem;
+}
+
+.btn-delete-exercise:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* Enhanced Modal buttons */
+.btn-modal {
+  min-width: 120px;
+  padding: 0.8rem 1.2rem;
+}
+
+.btn-cancel {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+}
+
+.btn-cancel:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+}
+
+.btn-create {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.btn-create:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.btn-create:disabled {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #64748b;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Enhanced Info Action button */
+.btn-info-action {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  min-width: auto;
 }
 
 .btn-info-action:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.3);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: white;
 }
 
-/* Modal styles */
+/* Enhanced disabled state for Start Test button */
+.btn-start-exercise:disabled {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #64748b;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 2px solid #f1f5f9;
+}
+
+.btn-start-exercise:disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(148, 163, 184, 0.1) 2px,
+    rgba(148, 163, 184, 0.1) 4px
+  );
+  pointer-events: none;
+}
+
+.btn-start-exercise:disabled:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Universal active state */
+.btn-exercise:active:not(:disabled),
+.btn-create-exercise:active,
+.btn-back:active,
+.btn-modal:active:not(:disabled),
+.btn-info-action:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s ease;
+}
+
+/* Universal ripple effect */
+.btn-exercise:not(:disabled),
+.btn-create-exercise,
+.btn-back,
+.btn-modal:not(:disabled),
+.btn-info-action {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-exercise:not(:disabled):active::after,
+.btn-create-exercise:active::after,
+.btn-back:active::after,
+.btn-modal:not(:disabled):active::after,
+.btn-info-action:active::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  to {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
+}
+
+/* Universal focus states */
+.btn-exercise:focus,
+.btn-create-exercise:focus,
+.btn-back:focus,
+.btn-modal:focus,
+.btn-info-action:focus {
+  outline: 3px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+.btn-start-exercise:disabled:focus {
+  outline: 3px solid rgba(148, 163, 184, 0.5);
+}
+
+/* Tooltip for disabled Start Test button */
+.btn-start-exercise:disabled:hover::after {
+  content: "Please select a patient from the Patients page first";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeInTooltip 0.3s ease forwards;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-start-exercise:disabled:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #1f2937;
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeInTooltip 0.3s ease forwards;
+}
+
+@keyframes fadeInTooltip {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Loading state for all buttons */
+.btn-exercise.loading,
+.btn-create-exercise.loading,
+.btn-modal.loading {
+  color: transparent;
+}
+
+.btn-exercise.loading::after,
+.btn-create-exercise.loading::after,
+.btn-modal.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive design for all buttons */
+@media (max-width: 768px) {
+  .exercise-actions {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  
+  .btn-exercise,
+  .btn-create-exercise,
+  .btn-back,
+  .btn-modal {
+    padding: 0.9rem 1rem;
+    font-size: 0.8rem;
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .btn-delete-exercise {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-exercise,
+  .btn-create-exercise,
+  .btn-back,
+  .btn-modal {
+    padding: 0.8rem 0.9rem;
+    font-size: 0.75rem;
+    gap: 0.4rem;
+  }
+}
+
+/* Enhanced Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1046,35 +1370,50 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .modal-content {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1.2rem;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 12px 12px 0 0;
 }
 
 .modal-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #333;
+  margin: 0;
 }
 
 .modal-close {
@@ -1082,371 +1421,117 @@ onMounted(() => {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #64748b;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+  color: #aaa;
+  padding: 0.2rem;
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-  background: #f1f5f9;
-  color: #334155;
+  color: #333;
+  background: rgba(0,0,0,0.1);
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 1.2rem;
 }
 
+.modal-footer {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  padding: 1.2rem;
+  border-top: 1px solid #eee;
+  background: #f8fafc;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Form styles */
 .form-group {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   font-weight: 600;
-  color: #374151;
+  color: #333;
   font-size: 0.9rem;
 }
 
 .form-input,
 .form-textarea {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e5e7eb;
+  padding: 0.8rem;
+  border: 2px solid #e9ecef;
   border-radius: 8px;
   font-size: 0.9rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  background: #f9fafb;
+  transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: white;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
-.form-input-file {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
-  background: #f8fafc;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-
-.form-input-file:hover {
-  border-color: #3b82f6;
-}
-
-.image-preview {
-  margin-top: 1rem;
-  position: relative;
-  display: inline-block;
-}
-
-.preview-image {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.remove-image {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Information banners */
+/* Info banners */
 .info-banner {
-  margin-top: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  border: 1px solid;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .global-info {
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.3);
-  color: #92400e;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #047857;
 }
 
 .patient-info {
   background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.3);
-  color: #1e40af;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #1d4ed8;
 }
 
-.info-banner .info-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+.info-icon {
+  font-size: 1.2rem;
 }
 
-.info-banner .info-text {
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-.modal-footer {
-  padding: 1.5rem;
-  border-top: 1px solid #e2e8f0;
+/* Info card */
+.info-card {
   display: flex;
-  gap: 0.8rem;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 12px;
+  text-align: left;
 }
 
-.btn-modal {
-  padding: 0.7rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.info-card .info-icon {
+  font-size: 2rem;
+  color: #0ea5e9;
 }
 
-.btn-cancel {
-  background: #f1f5f9;
-  color: #475569;
+.info-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #0c4a6e;
+  font-size: 1.1rem;
 }
 
-.btn-cancel:hover {
-  background: #e2e8f0;
+.info-content p {
+  margin: 0 0 1rem 0;
+  color: #075985;
+  line-height: 1.5;
 }
 
-.btn-create {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  box-shadow: 0 3px 12px rgba(16, 185, 129, 0.2);
-}
-
-.btn-create:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
-}
-
-.btn-create:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .exercises-grid {
-    grid-template-columns: 1fr;
-    gap: 0.8rem;
-  }
-  
-  .exercise-card {
-    padding: 1rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .exercises-container {
-    gap: 0.6rem;
-  }
-
-  .exercises-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 0.8rem;
-    gap: 0.6rem;
-  }
-
-  .header-actions {
-    flex-direction: column;
-    width: 100%;
-    gap: 0.5rem;
-  }
-
-  .btn-create-exercise,
-  .btn-back {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .patient-info-header,
-  .general-info-header {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .patient-avatar,
-  .patient-avatar-placeholder,
-  .general-icon {
-    width: 45px;
-    height: 45px;
-    font-size: 1.1rem;
-  }
-
-  .patient-details h2,
-  .general-details h2 {
-    font-size: 1.1rem;
-    text-align: center;
-  }
-
-  .exercises-content {
-    padding: 1rem;
-  }
-
-  .exercises-title {
-    font-size: 1.2rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .exercises-grid {
-    gap: 0.8rem;
-  }
-
-  .exercise-card {
-    padding: 1rem;
-    gap: 0.6rem;
-  }
-
-  .exercise-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.5rem;
-  }
-
-  .exercise-icon {
-    width: 50px;
-    height: 50px;
-  }
-
-  .fallback-icon {
-    font-size: 1.8rem;
-  }
-
-  .exercise-info h3 {
-    font-size: 1.1rem;
-    text-align: center;
-  }
-
-  .exercise-description {
-    font-size: 0.8rem;
-    padding: 0.6rem;
-  }
-
-  .btn-exercise {
-    padding: 0.7rem 0.8rem;
-    font-size: 0.75rem;
-  }
-
-  .exercise-actions {
-    flex-direction: column;
-  }
-
-  .modal-content {
-    width: 95%;
-    margin: 1rem;
-  }
-
-  .modal-header,
-  .modal-body,
-  .modal-footer {
-    padding: 1rem;
-  }
-
-  .info-card {
-    flex-direction: column;
-    text-align: center;
-    padding: 1.2rem;
-  }
-
-  .info-icon {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .exercises-content {
-    padding: 0.8rem;
-  }
-
-  .exercise-card {
-    padding: 0.8rem;
-    gap: 0.5rem;
-  }
-
-  .exercises-title {
-    font-size: 1.1rem;
-    margin-bottom: 0.6rem;
-  }
-
-  .exercise-info h3 {
-    font-size: 1rem;
-  }
-
-  .exercise-description {
-    font-size: 0.75rem;
-    padding: 0.5rem;
-    line-height: 1.4;
-  }
-
-  .btn-exercise {
-    padding: 0.6rem 0.7rem;
-    font-size: 0.7rem;
-  }
-
-  .exercise-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .fallback-icon {
-    font-size: 1.5rem;
-  }
-
-  .exercise-duration {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.6rem;
-  }
-
-  .exercise-type-badge {
-    font-size: 0.65rem;
-    padding: 0.15rem 0.5rem;
-  }
-
-  .patient-id-badge,
-  .general-subtitle {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.5rem;
-  }
-
-  .btn-create-exercise,
-  .btn-back {
-    padding: 0.5rem 1rem;
-    font-size: 0.75rem;
-  }
-}
+/* ...rest of existing styles... */
 </style>

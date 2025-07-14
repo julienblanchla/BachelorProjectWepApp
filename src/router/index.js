@@ -1,4 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { requireAuth, redirectIfAuthenticated } from '../middleware/auth.js'
+
+// Views
+import LoginPage from '../views/LoginPage.vue'
 import Dashboard from '../views/Dashboard.vue'
 import ChartsPage from '../views/ChartsPage.vue'
 import SensorsPage from '../views/SensorsPage.vue'
@@ -8,56 +12,123 @@ import ExercisesPage from '../views/ExercisesPage.vue'
 import CurrentExercisePage from '../views/CurrentExercisePage.vue'
 
 const routes = [
+  // Public routes
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginPage,
+    beforeEnter: redirectIfAuthenticated,
+    meta: { 
+      title: 'Login - Nordic Thingy',
+      public: true 
+    }
+  },
+  
+  // Protected routes
   {
     path: '/',
     name: 'Dashboard',
-    component: Dashboard
+    component: Dashboard,
+    beforeEnter: requireAuth,
+    meta: { 
+      title: 'Dashboard - Nordic Thingy',
+      requiresAuth: true 
+    }
   },
   {
     path: '/charts',
     name: 'Charts',
-    component: ChartsPage
+    component: ChartsPage,
+    beforeEnter: requireAuth,
+    meta: { 
+      title: 'Charts - Nordic Thingy',
+      requiresAuth: true 
+    }
   },
   {
     path: '/sensors',
     name: 'Sensors',
-    component: SensorsPage
+    component: SensorsPage,
+    beforeEnter: requireAuth,
+    meta: { 
+      title: 'Sensors - Nordic Thingy',
+      requiresAuth: true 
+    }
   },
   {
     path: '/motion',
     name: 'Motion',
-    component: MotionPage
+    component: MotionPage,
+    beforeEnter: requireAuth,
+    meta: { 
+      title: 'Motion - Nordic Thingy',
+      requiresAuth: true 
+    }
   },
   {
     path: '/patients',
     name: 'Patients',
-    component: PatientsPage
+    component: PatientsPage,
+    beforeEnter: requireAuth,
+    meta: { 
+      title: 'Patients - Nordic Thingy',
+      requiresAuth: true 
+    }
   },
   {
-    // Route for ExercisesPage without patient ID (general exercises view)
     path: '/exercises',
     name: 'Exercises',
     component: ExercisesPage,
-    props: false
+    beforeEnter: requireAuth,
+    meta: { 
+      title: 'Exercises - Nordic Thingy',
+      requiresAuth: true 
+    }
   },
   {
-    // Route for ExercisesPage with specific patient ID (patient-specific exercises)
     path: '/exercises/:patientId',
-    name: 'ExercisesWithPatient',
+    name: 'PatientExercises',
     component: ExercisesPage,
-    props: true
+    beforeEnter: requireAuth,
+    props: true,
+    meta: { 
+      title: 'Patient Exercises - Nordic Thingy',
+      requiresAuth: true 
+    }
   },
   {
     path: '/exercise/:exerciseType/:patientId',
     name: 'CurrentExercise',
     component: CurrentExercisePage,
-    props: true
+    beforeEnter: requireAuth,
+    props: true,
+    meta: { 
+      title: 'Exercise Session - Nordic Thingy',
+      requiresAuth: true 
+    }
+  },
+
+  // Catch all redirect
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes
+})
+
+// Global navigation guard for title updates and debugging
+router.beforeEach((to, from, next) => {
+  console.log(`🔄 Navigating from ${from.path} to ${to.path}`)
+  document.title = to.meta.title || 'Nordic Thingy - Professional Sensor Monitoring'
+  next()
+})
+
+router.afterEach((to, from) => {
+  console.log(`✅ Navigation completed to ${to.path}`)
 })
 
 export default router
