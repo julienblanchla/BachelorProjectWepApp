@@ -199,7 +199,7 @@ onMounted(async () => {
   if (isLoggedIn && !isLoginPage.value) {
     console.log('🚀 Starting data fetch cycle for authenticated user')
     updateData() // First immediate call
-    intervalId = setInterval(updateData, 3000) // Then every 3 seconds
+    intervalId = setInterval(updateData, 1000) // Then every 1 second
   } else if (!isLoggedIn && !isLoginPage.value) {
     // Redirect to login if not authenticated
     console.log('🔒 No session found, redirecting to login')

@@ -175,6 +175,7 @@ const annotations = ref([])
 
 // Track bad movement state
 const isBadMovement = ref(false)
+const lastProcessedAlert = ref('')
 
 // Nordic data recording structure
 const recordedData = ref([])
@@ -257,7 +258,6 @@ const exerciseConfig = computed(() => {
       console.warn('HeadRotation image not found')
     }
   } else if (exerciseType.value === 'unilateral-arm-flexion') {
-    // NEW: Add icon loading for Unilateral Arm Flexion
     try {
       config.icon = new URL('../assets/UnilateralArmFlexion.png', import.meta.url).href
     } catch (e) {
@@ -345,10 +345,12 @@ const startExercise = async () => {
   correctCount.value = 0
   incorrectCount.value = 0
   remainingTime.value = exerciseConfig.value.duration
-  isBadMovement.value = false // Reset bad movement state
+  isBadMovement.value = false
+  lastProcessedAlert.value = '' // Reset last processed alert
 
   await startRecording()
 
+  // Start timers
   timer = setInterval(() => fetchMotionData(), 1000)
   updateTimer = setInterval(() => updateDisplay(), 1000)
   exerciseTimer = setTimeout(() => stopExercise(), exerciseConfig.value.duration * 1000)
@@ -363,8 +365,9 @@ const stopExercise = async () => {
   console.log('🛑 Stopping exercise session...')
   
   isActive.value = false
-  isBadMovement.value = false // Reset bad movement state
+  isBadMovement.value = false
   
+  // Clear all timers
   if (timer) {
     clearInterval(timer)
     timer = null
@@ -406,7 +409,6 @@ const startRecording = async () => {
   try {
     console.log('🎬 Starting movement control test recording session...')
     
-    // Exercise name mapping
     const exerciseNames = {
       'neck-extension': 'ActiveCervicalFlexionExtension',
       'head-rotation': 'ActiveCervicalRotation',
@@ -481,67 +483,22 @@ const stopRecording = async () => {
 
 const generateCSV = () => {
   const headers = [
-    'Timestamp',
-    'Session_ID',
-    'Patient_ID',
-    'Exercise_Type',
-    'Duration_From_Start_Seconds',
-    'Motion_Alert',
-    'Movement_Type',
-    'Movement_Status',
-    'Exercise_Active',
-    'Remaining_Time',
-    'Total_Movements',
-    'Correct_Movements',
-    'Incorrect_Movements',
-    'Temperature',
-    'Humidity', 
-    'Pressure',
-    'Gas_Resistance',
-    'Color_Red',
-    'Color_Green',
-    'Color_Blue',
-    'Color_Clear',
-    'Accelerometer_X',
-    'Accelerometer_Y',
-    'Accelerometer_Z',
-    'Gyroscope_X',
-    'Gyroscope_Y',
-    'Gyroscope_Z',
-    'Magnetometer_X',
-    'Magnetometer_Y',
-    'Magnetometer_Z',
-    'Quaternion_W',
-    'Quaternion_X',
-    'Quaternion_Y',
-    'Quaternion_Z',
-    'Euler_Roll',
-    'Euler_Pitch',
-    'Euler_Yaw',
-    'Heading',
-    'Tap_Count',
-    'Tap_Direction',
-    'Orientation',
-    'Step_Count',
-    'Activity',
-    'Motion_Alert_Raw'
+    'Timestamp', 'Session_ID', 'Patient_ID', 'Exercise_Type', 'Duration_From_Start_Seconds',
+    'Motion_Alert', 'Movement_Type', 'Movement_Status', 'Exercise_Active', 'Remaining_Time',
+    'Total_Movements', 'Correct_Movements', 'Incorrect_Movements', 'Temperature', 'Humidity', 
+    'Pressure', 'Gas_Resistance', 'Color_Red', 'Color_Green', 'Color_Blue', 'Color_Clear',
+    'Accelerometer_X', 'Accelerometer_Y', 'Accelerometer_Z', 'Gyroscope_X', 'Gyroscope_Y', 'Gyroscope_Z',
+    'Magnetometer_X', 'Magnetometer_Y', 'Magnetometer_Z', 'Quaternion_W', 'Quaternion_X', 
+    'Quaternion_Y', 'Quaternion_Z', 'Euler_Roll', 'Euler_Pitch', 'Euler_Yaw', 'Heading',
+    'Tap_Count', 'Tap_Direction', 'Orientation', 'Step_Count', 'Activity', 'Motion_Alert_Raw'
   ]
   
   const sessionSummary = [
-    new Date().toISOString(),
-    currentSessionId.value,
-    patientId.value,
+    new Date().toISOString(), currentSessionId.value, patientId.value,
     customExercise.value ? customExercise.value.name : exerciseType.value,
-    recordingDuration.value,
-    'SESSION_SUMMARY',
-    'summary',
-    'complete',
-    'false',
-    0,
-    movementCount.value,
-    correctCount.value,
-    incorrectCount.value,
-    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', recordedData.value.length
+    recordingDuration.value, 'SESSION_SUMMARY', 'summary', 'complete', 'false', 0,
+    movementCount.value, correctCount.value, incorrectCount.value,
+    ...Array(30).fill(''), recordedData.value.length
   ]
   
   const dataRows = recordedData.value.map(dataPoint => {
@@ -549,50 +506,21 @@ const generateCSV = () => {
     const durationFromStart = Math.floor((new Date(dataPoint.timestamp) - recordingStartTime.value) / 1000)
     
     return [
-      dataPoint.timestamp,
-      currentSessionId.value,
-      patientId.value,
+      dataPoint.timestamp, currentSessionId.value, patientId.value,
       customExercise.value ? customExercise.value.name : exerciseType.value,
-      durationFromStart,
-      dataPoint.motionalert || 'No alert',
-      dataPoint.movementType || 'unknown',
-      dataPoint.status || 'active',
-      isActive.value ? 'true' : 'false',
-      remainingTime.value,
-      movementCount.value,
-      correctCount.value,
-      incorrectCount.value,
-      nordicDataPoint.temperature || '',
-      nordicDataPoint.humidity || '',
-      nordicDataPoint.pressure || '',
-      nordicDataPoint.gas || '',
-      nordicDataPoint.color?.red || '',
-      nordicDataPoint.color?.green || '',
-      nordicDataPoint.color?.blue || '',
-      nordicDataPoint.color?.clear || '',
-      nordicDataPoint.accelerometer?.x || '',
-      nordicDataPoint.accelerometer?.y || '',
-      nordicDataPoint.accelerometer?.z || '',
-      nordicDataPoint.gyroscope?.x || '',
-      nordicDataPoint.gyroscope?.y || '',
-      nordicDataPoint.gyroscope?.z || '',
-      nordicDataPoint.magnetometer?.x || '',
-      nordicDataPoint.magnetometer?.y || '',
-      nordicDataPoint.magnetometer?.z || '',
-      nordicDataPoint.quaternion?.w || '',
-      nordicDataPoint.quaternion?.x || '',
-      nordicDataPoint.quaternion?.y || '',
-      nordicDataPoint.quaternion?.z || '',
-      nordicDataPoint.euler?.roll || '',
-      nordicDataPoint.euler?.pitch || '',
-      nordicDataPoint.euler?.yaw || '',
-      nordicDataPoint.heading || '',
-      nordicDataPoint.tap?.count || '',
-      nordicDataPoint.tap?.direction || '',
-      nordicDataPoint.orientation || '',
-      nordicDataPoint.stepcount || '',
-      nordicDataPoint.activity || '',
-      nordicDataPoint.motionalert || ''
+      durationFromStart, dataPoint.motionalert || 'No alert',
+      dataPoint.movementType || 'unknown', dataPoint.status || 'active',
+      isActive.value ? 'true' : 'false', remainingTime.value,
+      movementCount.value, correctCount.value, incorrectCount.value,
+      nordicDataPoint.temperature || '', nordicDataPoint.humidity || '', nordicDataPoint.pressure || '', nordicDataPoint.gas || '',
+      nordicDataPoint.color?.red || '', nordicDataPoint.color?.green || '', nordicDataPoint.color?.blue || '', nordicDataPoint.color?.clear || '',
+      nordicDataPoint.accelerometer?.x || '', nordicDataPoint.accelerometer?.y || '', nordicDataPoint.accelerometer?.z || '',
+      nordicDataPoint.gyroscope?.x || '', nordicDataPoint.gyroscope?.y || '', nordicDataPoint.gyroscope?.z || '',
+      nordicDataPoint.magnetometer?.x || '', nordicDataPoint.magnetometer?.y || '', nordicDataPoint.magnetometer?.z || '',
+      nordicDataPoint.quaternion?.w || '', nordicDataPoint.quaternion?.x || '', nordicDataPoint.quaternion?.y || '', nordicDataPoint.quaternion?.z || '',
+      nordicDataPoint.euler?.roll || '', nordicDataPoint.euler?.pitch || '', nordicDataPoint.euler?.yaw || '',
+      nordicDataPoint.heading || '', nordicDataPoint.tap?.count || '', nordicDataPoint.tap?.direction || '',
+      nordicDataPoint.orientation || '', nordicDataPoint.stepcount || '', nordicDataPoint.activity || '', nordicDataPoint.motionalert || ''
     ]
   })
   
@@ -632,8 +560,14 @@ const fetchMotionData = async () => {
 
   try {
     if (nordicData.value?.motionalert) {
-      updateMotionDisplay(nordicData.value.motionalert)
-      analyzeMovement(nordicData.value.motionalert)
+      const currentAlert = nordicData.value.motionalert
+      
+      // Only process if the alert has changed
+      if (currentAlert !== lastProcessedAlert.value) {
+        updateMotionDisplay(currentAlert)
+        analyzeMovement(currentAlert)
+        lastProcessedAlert.value = currentAlert
+      }
     }
   } catch (error) {
     console.error('Error processing motion data:', error)
@@ -703,13 +637,6 @@ const recordDataPoint = () => {
     }
     
     recordedData.value.push(dataPoint)
-    
-    console.log('📝 Recording exercise data point:', {
-      timestamp: timestamp,
-      motionalert: currentAlert,
-      dataCount: recordedData.value.length
-    })
-    
     recordingCount.value++
   } catch (error) {
     console.error('❌ Recording data point error:', error)
@@ -717,16 +644,13 @@ const recordDataPoint = () => {
 }
 
 const analyzeMovement = (motionAlert) => {
-  if (!motionAlert) return
+  if (!motionAlert || !isActive.value) return
   
   const normalized = motionAlert.toLowerCase()
   
+  // Define neutral positions that shouldn't be counted
   const neutralPositions = [
-    'neutral',
-    'center_0',
-    'mid_center_0',
-    'high_center_0', 
-    'down_center_0'
+    'neutral', 'center_0', 'mid_center_0', 'high_center_0', 'down_center_0', 'no alert'
   ]
   
   const isNeutralPosition = neutralPositions.some(neutral => 
@@ -738,23 +662,28 @@ const analyzeMovement = (motionAlert) => {
     
     if (motionAlert.includes('- BAD MOVEMENT')) {
       incorrectCount.value++
+      isBadMovement.value = true
       console.log('❌ Bad movement detected:', motionAlert)
+      
+      // Reset bad movement indicator after 2 seconds
+      setTimeout(() => {
+        isBadMovement.value = false
+      }, 2000)
     } else {
       correctCount.value++
+      isBadMovement.value = false
       console.log('✅ Good movement detected:', motionAlert)
     }
     
     console.log(`Movement analysis: Total=${movementCount.value}, Correct=${correctCount.value}, Incorrect=${incorrectCount.value}`)
   } else {
+    isBadMovement.value = false
     console.log('⚪ Neutral position (not counted):', motionAlert)
   }
 }
 
 const updateMotionDisplay = (motionAlert) => {
   motionDescription.value = motionAlert
-  
-  // Update bad movement state
-  isBadMovement.value = motionAlert.includes('- BAD MOVEMENT')
   
   const imageName = motionAlert.replace(/ - BAD MOVEMENT$/i, '')
   
@@ -766,14 +695,6 @@ const updateMotionDisplay = (motionAlert) => {
     motionFallback.value = '❓'
   }
 }
-
-// Watch for motion alert changes
-watch(() => nordicData.value?.motionalert, (newAlert, oldAlert) => {
-  // Process only if alert actually changed
-  if (newAlert && newAlert !== oldAlert) {
-    console.log('🔄 Motion alert changed during exercise:', newAlert)
-  }
-}, { immediate: false })
 
 // Annotation methods
 const openAnnotationModal = async () => {
@@ -938,6 +859,210 @@ onUnmounted(() => {
   flex-wrap: wrap;
 }
 
+/* Motion Display Section - GARDE LE MÊME FOND BLANC */
+.motion-display {
+  background: rgba(255, 255, 255, 0.95); /* Toujours blanc */
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 300px;
+  transition: all 0.3s ease;
+}
+
+.motion-display.exercise-active {
+  border-left: 4px solid #10b981; /* Juste une bordure verte */
+  background: rgba(255, 255, 255, 0.95); /* GARDE LE FOND BLANC */
+}
+
+.motion-display.bad-movement {
+  border-left: 4px solid #ef4444; /* Bordure rouge pour mauvais mouvement */
+  background: rgba(255, 255, 255, 0.95); /* GARDE LE FOND BLANC */
+  animation: badMovementPulse 1s ease-in-out;
+}
+
+@keyframes badMovementPulse {
+  0%, 100% { 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
+  }
+  50% { 
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3); 
+  }
+}
+
+/* Motion Visual - GARDE LE MÊME FOND BLANC */
+.motion-visual-large {
+  width: 300px;
+  height: 200px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0); /* Fond gris clair neutre */
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+}
+
+.motion-visual-large.exercise-active {
+  transform: scale(1.02);
+  border-color: #10b981; /* Bordure verte active */
+  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2);
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0); /* GARDE LE MÊME FOND */
+}
+
+.motion-visual-large.bad-movement {
+  border-color: #ef4444; /* Bordure rouge pour erreur */
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.2);
+  animation: shake 0.5s ease-in-out;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0); /* GARDE LE MÊME FOND */
+}
+
+@keyframes shake {
+  0%, 100% { transform: scale(1.02) translateX(0); }
+  25% { transform: scale(1.02) translateX(-5px); }
+  75% { transform: scale(1.02) translateX(5px); }
+}
+
+.motion-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.motion-fallback {
+  font-size: 4rem;
+  color: #64748b;
+}
+
+.motion-visual-large.no-image .motion-fallback {
+  color: #94a3b8;
+}
+
+/* Motion Description - GARDE LE MÊME FOND BLANC */
+.motion-description-large {
+  text-align: center;
+  font-size: 1rem;
+  color: #475569;
+  font-weight: 500;
+  max-width: 600px;
+  line-height: 1.5;
+  padding: 1rem;
+  background: rgba(248, 250, 252, 0.8); /* Fond blanc cassé neutre */
+  border-radius: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.3);
+  transition: all 0.3s ease;
+}
+
+.motion-description-large.exercise-active {
+  background: rgba(248, 250, 252, 0.8); /* GARDE LE MÊME FOND BLANC */
+  color: #047857; /* Juste le texte en vert */
+  border-color: rgba(16, 185, 129, 0.2); /* Bordure verte subtile */
+}
+
+.motion-description-large.bad-movement {
+  background: rgba(248, 250, 252, 0.8); /* GARDE LE MÊME FOND BLANC */
+  color: #dc2626; /* Juste le texte en rouge */
+  border-color: rgba(239, 68, 68, 0.2); /* Bordure rouge subtile */
+  animation: textPulse 0.5s ease-in-out;
+}
+
+@keyframes textPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Exercise Status Section */
+.exercise-status {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.status-info {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.status-item {
+  text-align: center;
+  padding: 0.8rem;
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 8px;
+  border: 1px solid rgba(203, 213, 225, 0.3);
+  transition: all 0.3s ease;
+}
+
+.status-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.status-item strong {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.2rem;
+}
+
+.status-item span {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.status-message {
+  text-align: center;
+  font-size: 0.9rem;
+  padding: 0.8rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.status-message.waiting {
+  background: rgba(148, 163, 184, 0.1);
+  color: #475569;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.status-message.active {
+  background: rgba(248, 250, 252, 0.8); /* GARDE FOND BLANC */
+  color: #047857; /* Texte vert pour indiquer actif */
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-message.bad-movement {
+  background: rgba(248, 250, 252, 0.8); /* GARDE FOND BLANC */
+  color: #dc2626; /* Texte rouge pour erreur */
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  animation: statusPulse 1s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Button Styles */
 .btn-exercise-action {
   padding: 0.8rem 1.2rem;
   border: none;
@@ -960,21 +1085,6 @@ onUnmounted(() => {
   min-width: 120px;
 }
 
-.btn-exercise-action::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transition: left 0.6s ease;
-}
-
-.btn-exercise-action:hover::before {
-  left: 100%;
-}
-
 .btn-start-session {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
@@ -983,7 +1093,6 @@ onUnmounted(() => {
 .btn-start-session:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
 
 .btn-stop-session {
@@ -994,7 +1103,6 @@ onUnmounted(() => {
 .btn-stop-session:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
 }
 
 .btn-download-session {
@@ -1005,7 +1113,6 @@ onUnmounted(() => {
 .btn-download-session:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
 }
 
 .btn-back-exercises {
@@ -1016,7 +1123,6 @@ onUnmounted(() => {
 .btn-back-exercises:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
-  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
   color: white;
 }
 
@@ -1028,63 +1134,45 @@ onUnmounted(() => {
 .btn-exercise-action:not(.btn-start-session):not(.btn-stop-session):not(.btn-download-session):not(.btn-back-exercises):hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
 }
 
 .btn-save {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   flex: 1;
+  padding: 0.8rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-save:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
 
 .btn-cancel {
   background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
   color: white;
   flex: 1;
+  padding: 0.8rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-cancel:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
-  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
 }
 
-.btn-exercise-action:active,
-.btn-save:active,
-.btn-cancel:active {
-  transform: translateY(0) scale(0.98);
-  transition: all 0.1s ease;
-}
-
-.btn-exercise-action:active::after,
-.btn-save:active::after,
-.btn-cancel:active::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translate(-50%, -50%);
-  animation: ripple 0.6s ease-out;
-}
-
-@keyframes ripple {
-  to {
-    width: 300px;
-    height: 300px;
-    opacity: 0;
-  }
-}
-
+/* Modal Styles */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -1172,7 +1260,7 @@ onUnmounted(() => {
   gap: 0.8rem;
 }
 
-/* Enhanced Success Toast */
+/* Success Toast */
 .success-toast {
   position: fixed;
   top: 20px;
@@ -1204,6 +1292,11 @@ onUnmounted(() => {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .exercise-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
   .exercise-controls {
     width: 100%;
     justify-content: center;
@@ -1216,9 +1309,32 @@ onUnmounted(() => {
     font-size: 0.8rem;
     min-width: 100px;
   }
+
+  .motion-visual-large {
+    width: 250px;
+    height: 150px;
+  }
+
+  .motion-fallback {
+    font-size: 3rem;
+  }
+
+  .status-info {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+
+  .motion-description-large {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
 }
 
 @media (max-width: 480px) {
+  .current-exercise-page {
+    padding: 0.5rem;
+  }
+
   .exercise-controls {
     flex-direction: column;
     gap: 0.5rem;
@@ -1231,6 +1347,20 @@ onUnmounted(() => {
     min-width: auto;
   }
 
+  .motion-visual-large {
+    width: 200px;
+    height: 120px;
+  }
+
+  .motion-fallback {
+    font-size: 2.5rem;
+  }
+
+  .status-info {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
   .modal-actions {
     flex-direction: column;
   }
@@ -1238,6 +1368,11 @@ onUnmounted(() => {
   .btn-save,
   .btn-cancel {
     width: 100%;
+  }
+
+  .motion-description-large {
+    font-size: 0.8rem;
+    padding: 0.6rem;
   }
 }
 </style>
